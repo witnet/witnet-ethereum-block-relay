@@ -94,6 +94,12 @@ contract TestBlockRelay {
   blockExists(_blockHash)
   returns(bool)
   {
+    uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
+    verifyPoi(
+      _poi,
+      tallyMerkleRoot,
+      _index,
+      _element);
     return true;
   }
 
@@ -113,6 +119,12 @@ contract TestBlockRelay {
   blockExists(_blockHash)
   returns(bool)
   {
+    uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
+    verifyPoi(
+      _poi,
+      tallyMerkleRoot,
+      _index,
+      _element);
     return true;
   }
 
@@ -124,5 +136,35 @@ contract TestBlockRelay {
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @dev Verifies the validity of a PoI
+  /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
+  /// @param _root the merkle root
+  /// @param _index the index in the merkle tree of the element to verify
+  /// @param _element the leaf to be verified
+  /// @return true or false depending the validity
+  function verifyPoi(
+    uint256[] memory _poi,
+    uint256 _root,
+    uint256 _index,
+    uint256 _element)
+  private pure returns(bool)
+  {
+    uint256 tree = _element;
+    uint256 index = _index;
+    uint256 root;
+    // We want to prove that the hash of the _poi and the _element is equal to _root
+    // For knowing if concatenate to the left or the right we check the parity of the the index
+    for (uint i = 0; i<_poi.length; i++) {
+      if (index%2 == 0) {
+        tree = uint256(sha256(abi.encodePacked(tree, _poi[i])));
+      } else {
+        tree = uint256(sha256(abi.encodePacked(_poi[i], tree)));
+      }
+      index = index>>1;
+    }
+    root = _root + 1;
+    return true;
   }
 }

@@ -21,7 +21,6 @@ contract("Block relay Interface", accounts => {
       blockRelayInstance3 = await BlockRelayV3.new({
         from: accounts[0],
       })
-
       blockRelayProxy = await BlockRelayProxy.new({
         from: accounts[0],
       })
@@ -29,10 +28,13 @@ contract("Block relay Interface", accounts => {
         from: accounts[0],
       })
     })
-    it("should revert when trying to verify dr in instance 1", async () => {
+    it("should revert when trying to verify dr in blockRelayInstance", async () => {
+      // It should revert because of the blockExists modifer in blockRelayInstance
       await truffleAssert.reverts(blockRelayProxy.verifyDrPoi([1], 1, 1, 1), "Non-existing block")
     })
+
     it("should change the BR instance and be able to read verify dr poi", async () => {
+      // it should not revert because the block relay has changed and the modifier in no longer needed
       await blockRelayProxy.UpgradeBlockRelay(blockRelayInstance2.address, {
         from: accounts[0],
       })
@@ -40,13 +42,33 @@ contract("Block relay Interface", accounts => {
       assert.equal(dr, true)
     })
 
+    it("should change the return value when upgrading the BR", async () => {
+      // it should return diffrent values when changing the BR
+      await blockRelayProxy.UpgradeBlockRelay(blockRelayInstance3.address, {
+        from: accounts[0],
+      })
+      const dr = await blockRelayProxy.verifyTallyPoi([1], 1, 1, 1)
+      assert.equal(dr, false)
+
+      // it should not revert because the block relay has changed and the modifier in no longer needed      
+      await blockRelayProxy.UpgradeBlockRelay(blockRelayInstance2.address, {
+        from: accounts[0],
+      })
+      const dr2 = await blockRelayProxy.verifyTallyPoi([1], 1, 1, 1)
+      
+      assert.equal(dr2, true)
+
+    })
+
     it("should revert when upgrading the same address", async () => {
+      // It should not allow upgrading the BR if presenting the current address
       await truffleAssert.reverts(blockRelayProxy.UpgradeBlockRelay(blockRelayInstance2.address, {
         from: accounts[0],
       }), "The Block Relay instance is already upgraded")
     })
 
     it("should revert when trying to upgrade with non-owner", async () => {
+      // It should not allow upgrading the BR becouse of the onlyOwner modifier
       await truffleAssert.reverts(blockRelayProxy.UpgradeBlockRelay(blockRelayInstance.address, {
         from: accounts[1],
       }), "Permission denied")
