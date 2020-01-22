@@ -7,6 +7,7 @@ pragma solidity ^0.5.0;
 pragma solidity ^0.5.0;
 */
 
+
 contract TestBlockRelayV3 {
 
   struct MerkleRoots {
@@ -91,7 +92,7 @@ contract TestBlockRelayV3 {
       tallyMerkleRoot,
       _index,
       _element) == true) {
-    return false;
+      return false;
       }
   }
 

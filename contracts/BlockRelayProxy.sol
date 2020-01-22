@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 import "./BlockRelayInterface.sol";
 
+
 contract BlockRelayProxy {
   address public blockRelayAddress;
   address owner;
@@ -9,25 +10,22 @@ contract BlockRelayProxy {
   modifier onlyOwner() {
     require(msg.sender == owner, "Permission denied");
     _;
-}
-modifier notIdentical(address _newAddress) {
+  }
+
+  modifier notIdentical(address _newAddress) {
     require(_newAddress != blockRelayAddress, "The Block Relay instance is already upgraded");
     _;
-}
+  }
+
   constructor() public{
     // Only the contract deployer is able to push blocks
     owner = msg.sender;
   }
 
-  function UpgradeBlockRelay(address _newAddress) public onlyOwner notIdentical(_newAddress) {
-    blockRelayAddress = _newAddress;
-    blockRelayInstance = BlockRelayInterface(_newAddress);
-  }
-
   /// @notice Returns the beacon from the last inserted block.
   /// The last beacon (in bytes) will be used by Witnet Bridge nodes to compute their eligibility.
   /// @return last beacon in bytes
-  function getLastBeacon() external view returns(bytes memory){
+  function getLastBeacon() external view returns(bytes memory) {
     return blockRelayInstance.getLastBeacon();
   }
 
@@ -41,16 +39,31 @@ modifier notIdentical(address _newAddress) {
     uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
-    uint256 _element) external view returns(bool){
-      return blockRelayInstance.verifyDrPoi(_poi, _blockHash,_index, _element);
-
-    }
+    uint256 _element) external view returns(bool)
+    {
+    return blockRelayInstance.verifyDrPoi(
+      _poi,
+      _blockHash,
+      _index,
+      _element);
+  }
 
   function verifyTallyPoi(
     uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
-    uint256 _element) external view returns(bool){
-     return blockRelayInstance.verifyTallyPoi(_poi, _blockHash,_index, _element);
-    }
+    uint256 _element) external view returns(bool)
+    {
+    return blockRelayInstance.verifyTallyPoi(
+      _poi,
+      _blockHash,
+      _index,
+      _element);
+  }
+
+  function upgradeBlockRelay(address _newAddress) public onlyOwner notIdentical(_newAddress) {
+    blockRelayAddress = _newAddress;
+    blockRelayInstance = BlockRelayInterface(_newAddress);
+  }
+
 }

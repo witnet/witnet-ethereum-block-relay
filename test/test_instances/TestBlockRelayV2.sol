@@ -62,7 +62,7 @@ contract TestBlockRelayV2 {
   view
   returns(bool)
   {
-      uint256 drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
+    uint256 drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
     verifyPoi(
       _poi,
       drMerkleRoot,
@@ -86,13 +86,13 @@ contract TestBlockRelayV2 {
   view
   returns(bool)
   {
-   uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
+    uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
     if (verifyPoi(
       _poi,
       tallyMerkleRoot,
       _index,
       _element) == true) {
-    return true;
+      return true;
       }
   }
 
