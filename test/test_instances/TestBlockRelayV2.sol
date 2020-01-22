@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
 
+import "../../contracts/BlockRelayInterface.sol";
+
 
 /**
  * @title Block relay contract
@@ -8,7 +10,7 @@ pragma solidity ^0.5.0;
 pragma solidity ^0.5.0;
 */
 
-contract TestBlockRelayV2 {
+contract TestBlockRelayV2 is BlockRelayInterface {
 
   struct MerkleRoots {
     // hash of the merkle root of the DRs in Witnet

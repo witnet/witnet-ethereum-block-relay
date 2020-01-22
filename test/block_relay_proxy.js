@@ -1,4 +1,4 @@
-const BlockRelay = artifacts.require("TestBlockRelay")
+const BlockRelayV1 = artifacts.require("TestBlockRelayV1")
 const truffleAssert = require("truffle-assertions")
 const BlockRelayProxy = artifacts.require("BlockRelayProxy")
 const BlockRelayV2 = artifacts.require("TestBlockRelayV2")
@@ -6,13 +6,13 @@ const BlockRelayV3 = artifacts.require("TestBlockRelayV3")
 
 contract("Block relay Interface", accounts => {
   describe("Block relay Interface test suite", () => {
-    let blockRelayInstance
+    let blockRelayInstance1
     let blockRelayInstance2
     let blockRelayInstance3
     let blockRelayProxy
 
     before(async () => {
-      blockRelayInstance = await BlockRelay.new({
+      blockRelayInstance1 = await BlockRelayV1.new({
         from: accounts[0],
       })
       blockRelayInstance2 = await BlockRelayV2.new({
@@ -24,7 +24,7 @@ contract("Block relay Interface", accounts => {
       blockRelayProxy = await BlockRelayProxy.new({
         from: accounts[0],
       })
-      await blockRelayProxy.upgradeBlockRelay(blockRelayInstance.address, {
+      await blockRelayProxy.upgradeBlockRelay(blockRelayInstance1.address, {
         from: accounts[0],
       })
     })
@@ -38,6 +38,7 @@ contract("Block relay Interface", accounts => {
       await blockRelayProxy.upgradeBlockRelay(blockRelayInstance2.address, {
         from: accounts[0],
       })
+
       const dr = await blockRelayProxy.verifyDrPoi([1], 1, 1, 1)
       assert.equal(dr, true)
     })
@@ -66,9 +67,18 @@ contract("Block relay Interface", accounts => {
 
     it("should revert when trying to upgrade with non-owner", async () => {
       // It should not allow upgrading the BR becouse of the onlyOwner modifier
-      await truffleAssert.reverts(blockRelayProxy.upgradeBlockRelay(blockRelayInstance.address, {
+      await truffleAssert.reverts(blockRelayProxy.upgradeBlockRelay(blockRelayInstance1.address, {
         from: accounts[1],
       }), "Permission denied")
     })
+
+    /* it("should not allow ", async () => {
+      // It should not allow upgrading the BR becouse of the onlyOwner modifier
+      await blockRelayProxy.upgradeBlockRelay(blockRelayInstance3.address, {
+        from: accounts[0],
+      })
+      await truffleAssert.reverts(blockRelayProxy.getLastBecon());
+
+    }) */
   })
 })

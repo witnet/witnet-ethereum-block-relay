@@ -1,12 +1,15 @@
 pragma solidity ^0.5.0;
 
+import "../../contracts/BlockRelayInterface.sol";
 
 /**
  * @title Block relay contract
  * @notice Contract to store/read block headers from the Witnet network
  * @author Witnet Foundation
  */
-contract TestBlockRelay {
+
+
+contract TestBlockRelayV1 is BlockRelayInterface {
 
   struct MerkleRoots {
     // hash of the merkle root of the DRs in Witnet
@@ -128,7 +131,7 @@ contract TestBlockRelay {
     return true;
   }
 
-   /// @dev Read the beacon of the last block inserted
+  /// @dev Read the beacon of the last block inserted
   /// @return bytes to be signed by bridge nodes
   function getLastBeacon()
     public
