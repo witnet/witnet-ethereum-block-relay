@@ -1,14 +1,16 @@
-const BlockRelayV1 = artifacts.require("TestBlockRelayV1")
 const truffleAssert = require("truffle-assertions")
+const BlockRelayV1 = artifacts.require("TestBlockRelayV1")
 const BlockRelayProxy = artifacts.require("BlockRelayProxy")
 const BlockRelayV2 = artifacts.require("TestBlockRelayV2")
 const BlockRelayV3 = artifacts.require("TestBlockRelayV3")
+const BlockRelayV4 = artifacts.require("TestBlockRelayV4")
 
 contract("Block relay Interface", accounts => {
   describe("Block relay Interface test suite", () => {
     let blockRelayInstance1
     let blockRelayInstance2
     let blockRelayInstance3
+    let blockRelayInstance4
     let blockRelayProxy
 
     before(async () => {
@@ -19,6 +21,9 @@ contract("Block relay Interface", accounts => {
         from: accounts[0],
       })
       blockRelayInstance3 = await BlockRelayV3.new({
+        from: accounts[0],
+      })
+      blockRelayInstance4 = await BlockRelayV4.new({
         from: accounts[0],
       })
       blockRelayProxy = await BlockRelayProxy.new(blockRelayInstance2.address, {
@@ -67,18 +72,20 @@ contract("Block relay Interface", accounts => {
 
     it("should revert when trying to upgrade with non-owner", async () => {
       // It should not allow upgrading the BR becouse of the onlyOwner modifier
-      await truffleAssert.reverts(blockRelayProxy.upgradeBlockRelay(blockRelayInstance1.address, {
+      await truffleAssert.reverts(blockRelayProxy.upgradeBlockRelay(blockRelayInstance3.address, {
         from: accounts[1],
       }), "Permission denied")
     })
 
-    /* it("should not allow ", async () => {
-      // It should not allow upgrading the BR becouse of the onlyOwner modifier
-      await blockRelayProxy.upgradeBlockRelay(blockRelayInstance3.address, {
+    it("should revert when upgrading a non upgradable block relay", async () => {
+      // Upgrade block relay instance 4
+      await blockRelayProxy.upgradeBlockRelay(blockRelayInstance4.address, {
         from: accounts[0],
       })
-      await truffleAssert.reverts(blockRelayProxy.getLastBecon());
-
-    }) */
+      // It should revert since block relay instance 4 is not upgradable
+      await truffleAssert.reverts(blockRelayProxy.upgradeBlockRelay(blockRelayInstance3.address, {
+        from: accounts[0],
+      }), "The block relay is not upgradable")
+    })
   })
 })

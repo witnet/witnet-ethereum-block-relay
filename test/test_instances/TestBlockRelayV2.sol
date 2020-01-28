@@ -4,7 +4,7 @@ import "../../contracts/BlockRelayInterface.sol";
 
 
 /**
- * @title Block relay contract
+ * @title Block relay contract for testing purposes
  * @notice Contract to store/read block headers from the Witnet network
  * @author Witnet Foundation
 pragma solidity ^0.5.0;
@@ -20,6 +20,7 @@ contract TestBlockRelayV2 is BlockRelayInterface {
     // Points to previous vote
     uint256 previousVote;
   }
+
   struct Beacon {
     // hash of the last block
     uint256 blockHash;

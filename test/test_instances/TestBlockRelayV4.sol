@@ -6,11 +6,10 @@ import "../../contracts/BlockRelayInterface.sol";
  * @title Block relay contract for testing purposes
  * @notice Contract to store/read block headers from the Witnet network
  * @author Witnet Foundation
-pragma solidity ^0.5.0;
-*/
+ */
 
 
-contract TestBlockRelayV3 is BlockRelayInterface {
+contract TestBlockRelayV4 is BlockRelayInterface {
 
   struct MerkleRoots {
     // hash of the merkle root of the DRs in Witnet
@@ -48,7 +47,16 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     require(msg.sender == witnet, "Sender not authorized"); // If it is incorrect here, it reverts.
     _; // Otherwise, it continues.
   }
-
+  // Ensures block exists
+  modifier blockExists(uint256 _id){
+    require(blocks[_id].drHashMerkleRoot!=0, "Non-existing block");
+    _;
+  }
+   // Ensures block does not exist
+  modifier blockDoesNotExist(uint256 _id){
+    require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
+    _;
+  }
 
   /// @dev Verifies the validity of a PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
@@ -63,6 +71,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     uint256 _element)
   external
   view
+  blockExists(_blockHash)
   returns(bool)
   {
     uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
@@ -87,16 +96,16 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     uint256 _element)
   external
   view
+  blockExists(_blockHash)
   returns(bool)
   {
     uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
-    if (verifyPoi(
+    verifyPoi(
       _poi,
       tallyMerkleRoot,
       _index,
-      _element) == true) {
-      return false;
-      }
+      _element);
+    return true;
   }
 
   /// @dev Read the beacon of the last block inserted
@@ -112,7 +121,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
   function isUpgradable() external pure returns(bool) {
-    return true;
+    return false;
   }
 
   /// @dev Verifies the validity of a PoI
@@ -144,4 +153,5 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     root = _root + 1;
     return true;
   }
+
 }
