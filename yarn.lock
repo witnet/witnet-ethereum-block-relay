@@ -6389,13 +6389,6 @@ widest-line@^2.0.0:
   dependencies:
     string-width "^2.1.1"
 
-witnet-ethereum-bridge@girazoki/witnet-ethereum-bridge#changes_to_separate:
-  version "0.1.0"
-  resolved "https://codeload.github.com/girazoki/witnet-ethereum-bridge/tar.gz/6093314ea6e44713e81d6a975405e222e9f56a11"
-  dependencies:
-    openzeppelin-solidity "2.4.0"
-    vrf-solidity "^0.2.1"
-
 word-wrap@~1.2.3:
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/word-wrap/-/word-wrap-1.2.3.tgz#610636f6b1f703891bd34771ccb17fb93b47079c"

@@ -1,8 +1,7 @@
 pragma solidity ^0.5.0;
 
-import "witnet-ethereum-bridge/contracts/ActiveBridgeSetLib.sol";
-import "witnet-ethereum-bridge/contracts/WitnetBridgeInterface.sol";
-import "witnet-ethereum-bridge/contracts/BlockRelayInterface.sol";
+import "./ABSInterface.sol";
+import "./BlockRelayInterface.sol";
 
 
 /**
@@ -65,9 +64,10 @@ contract NewBlockRelay is BlockRelayInterface {
   uint256 currentEpoch;
   uint256 proposalEpoch;
 
+  // Initializes the active identities in the ABS
   uint256 activeIdentities;
 
-  WitnetBridgeInterface wbi;
+  ABSInterface wbi;
 
   // Last block reported
   Beacon public lastBlock;
@@ -87,7 +87,7 @@ contract NewBlockRelay is BlockRelayInterface {
     witnetGenesis = _witnetGenesis;
     epochSeconds = _epochSeconds;
     firstBlock = _firstBlock;
-    wbi = WitnetBridgeInterface(_wbiAddress);
+    wbi = ABSInterface(_wbiAddress);
   }
 
   // Ensure block exists
@@ -112,7 +112,6 @@ contract NewBlockRelay is BlockRelayInterface {
   // Ensure that the msg.sender is in the abs
   modifier isAbsMember(address _address){
 
-    //require(ActiveBridgeSetLib.absMembership(wbi.abs(), _address), "Not a member of the abs");
     require(wbi.isABSMember(_address) == true, "Not a member of the abs");
     _;
   }
@@ -358,7 +357,7 @@ contract NewBlockRelay is BlockRelayInterface {
     voteInfo[_vote].voteHashes.epoch = _epoch;
 
     // Update the ABS activity once finalized
-    (activeIdentities, , ) = wbi.abs();
+    activeIdentities = wbi.absCount();
   }
 
   /// @dev Verifies the validity of a PoI

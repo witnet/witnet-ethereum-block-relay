@@ -2,7 +2,6 @@ pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "../../contracts/NewBlockRelay.sol";
-import "witnet-ethereum-bridge/contracts/ActiveBridgeSetLib.sol";
 
 /**
  * @title Test Helper for the new block Relay contract
@@ -17,25 +16,10 @@ contract NewBRTestHelper is NewBlockRelay {
   uint256 witnetGenesis;
   uint256 firstBlock;
 
-  using ActiveBridgeSetLib for ActiveBridgeSetLib.ActiveBridgeSet;
-
-  mapping(address => bool) fakeABS;
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress)
   NewBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
-
-  modifier isAbsMember(address _address){
-    require(fakeABS[_address] == true, "Not a member of the abs");
-    _;
-  }
-
-
-  // Pushes the activity in the ABS
-  function pushActivity(uint256 _blockNumber) public {
-    address _address = msg.sender;
-    fakeABS[_address] = true;
-  }
 
   // Updates the currentEpoch
   function updateEpoch() public view returns (uint256) {
@@ -50,11 +34,6 @@ contract NewBRTestHelper is NewBlockRelay {
   // Sets the currentEpoch
   function setEpoch(uint256 _epoch) public returns (uint256) {
     currentEpoch = _epoch;
-  }
-
-  // Sets the number of members in the ABS
-  function setAbsIdentitiesNumber(uint256 _identitiesNumber) public returns (uint256) {
-    activeIdentities = _identitiesNumber;
   }
 
   // Gets the vote with the poposeBlock inputs

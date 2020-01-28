@@ -1,22 +1,17 @@
-const NewBlockRelay = artifacts.require("NewBlockRelay")
-const BlockRelayProxy = artifacts.require("BlockRelayProxy")
-const WitnetBridgeInterface = artifacts.require("WitnetBridgeInterface")
 const sha = require("js-sha256")
 const NewBRTestHelper = artifacts.require("NewBRTestHelper")
+const ABSMock = artifacts.require("ABSMock")
 const truffleAssert = require("truffle-assertions")
 contract("New Block Relay", accounts => {
   describe("New block relay test suite", () => {
     let contest
+    let abs
     beforeEach(async () => {
-      let proxy = await BlockRelayProxy.new({
+      abs = await ABSMock.new({
         from: accounts[0],
       })
 
-      let wbi = await WitnetBridgeInterface.new(proxy.address, 2, {
-        from: accounts[0],
-      })
-
-      contest = await NewBRTestHelper.new(1568559600, 90, 0, wbi.address, {
+      contest = await NewBRTestHelper.new(1568559600, 90, 0, abs.address, {
         from: accounts[0],
       })
     })
@@ -32,8 +27,9 @@ contract("New Block Relay", accounts => {
       let epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
-
+      await abs.pushActivity({
+        from: accounts[0],
+      })
       // Propose the vote to the Block Relay
       const tx = contest.proposeBlock(blockHash, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
       await waitForHash(tx)
@@ -76,7 +72,7 @@ contract("New Block Relay", accounts => {
       const epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
 
       // Propose blockHash1 to the Block Relay
       const tx1 = contest.proposeBlock(blockHash1, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -122,9 +118,9 @@ contract("New Block Relay", accounts => {
       const epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
       // Set the number of members of the ABS to 3
-      await contest.setAbsIdentitiesNumber(3)
+      await abs.setAbsIdentitiesNumber(3)
 
       // Propose blockHash1 3 times to the Block Relay
       const tx = contest.proposeBlock(blockHash1, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -169,9 +165,9 @@ contract("New Block Relay", accounts => {
       const epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
       // Set the abs to 3 identities
-      await contest.setAbsIdentitiesNumber(3)
+      await abs.setAbsIdentitiesNumber(3)
 
       // Propose the vote to the Block Relay
       const tx = contest.proposeBlock(blockHash, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -201,7 +197,7 @@ contract("New Block Relay", accounts => {
       const epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
 
       // Should revert because proposing for the current epoch
       await truffleAssert.reverts(contest.proposeBlock(blockHash, epoch, drMerkleRoot, tallyMerkleRoot, 0),
@@ -241,7 +237,7 @@ contract("New Block Relay", accounts => {
       const epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
 
       // Propose the vote to the Block Relay that is going to be finalized
       const tx = contest.proposeBlock(blockHash, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -270,7 +266,7 @@ contract("New Block Relay", accounts => {
       let epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
 
       // Propose the vote to the Block Relay
       const tx = contest.proposeBlock(blockHash, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -307,9 +303,9 @@ contract("New Block Relay", accounts => {
       let epoch = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
       // Set the ABS to 3 members
-      await contest.setAbsIdentitiesNumber(3)
+      await abs.setAbsIdentitiesNumber(3)
 
       // Propose blockHash0 3 times to the Block Relay
       const tx = contest.proposeBlock(blockHash0, epoch - 1, drMerkleRoot, tallyMerkleRoot, 0)
@@ -392,9 +388,9 @@ contract("New Block Relay", accounts => {
       const epoch1 = await contest.updateEpoch.call()
 
       // Update the ABS to be included
-      await contest.pushActivity(1)
+      await abs.pushActivity()
       // Set the ABS to 3 members
-      await contest.setAbsIdentitiesNumber(3)
+      await abs.setAbsIdentitiesNumber(3)
 
       // Propose blockHash0 to he Block Relay
       const tx = contest.proposeBlock(blockHash0, epoch1 - 1, drMerkleRoot, tallyMerkleRoot, 0)
