@@ -127,17 +127,11 @@ contract NewBlockRelay is BlockRelayInterface {
     _;
   }
 
-  /// @dev Updates the epoch
-  function updateEpoch() public view returns(uint256) {
-    // solium-disable-next-line security/no-block-members
-    return (block.timestamp - witnetGenesis)/epochSeconds;
-  }
-
   /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header
   /// @return Requests-only merkle root hash in the block header.
   function readDrMerkleRoot(uint256 _blockHash)
-    public
+    external
     view
     blockExists(_blockHash)
   returns(uint256 drMerkleRoot)
@@ -149,7 +143,7 @@ contract NewBlockRelay is BlockRelayInterface {
   /// @param _blockHash Hash of the block header
   /// tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
-    public
+    external
     view
     blockExists(_blockHash)
   returns(uint256 tallyMerkleRoot)
@@ -157,10 +151,16 @@ contract NewBlockRelay is BlockRelayInterface {
     tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
   }
 
+  /// @dev Verifies if the contract is upgradable
+  /// @return true if the contract upgradable
+  function isUpgradable() external pure returns(bool) {
+    return true;
+  }
+
   /// @dev Read the beacon of the last block inserted
   /// @return bytes to be signed by bridge nodes
   function getLastBeacon()
-    public
+    external
     view
   returns(bytes memory)
   {
@@ -174,11 +174,11 @@ contract NewBlockRelay is BlockRelayInterface {
   /// @param _element the leaf to be verified
   /// @return true or false depending the validity
   function verifyDrPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   blockExists(_blockHash)
   epochIsFinalized(currentEpoch)
@@ -199,11 +199,11 @@ contract NewBlockRelay is BlockRelayInterface {
   /// @param _element the element
   /// @return true or false depending the validity
   function verifyTallyPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   blockExists(_blockHash)
   returns(bool)
@@ -230,7 +230,7 @@ contract NewBlockRelay is BlockRelayInterface {
     uint256 _tallyMerkleRoot,
     uint256 _previousVote
     )
-    public
+    external
     epochValid(_epoch)
     isAbsMember(msg.sender)
     blockDoesNotExist(_blockHash)
@@ -296,6 +296,12 @@ contract NewBlockRelay is BlockRelayInterface {
 
     return bytes32(vote);
 
+  }
+
+  /// @dev Updates the epoch
+  function updateEpoch() public view returns(uint256) {
+    // solium-disable-next-line security/no-block-members
+    return (block.timestamp - witnetGenesis)/epochSeconds;
   }
 
   /// @dev Post new block into the block relay

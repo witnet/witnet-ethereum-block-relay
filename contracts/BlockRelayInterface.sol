@@ -40,4 +40,8 @@ interface BlockRelayInterface {
     uint256 _index,
     uint256 _element) external view returns(bool);
 
+  /// @notice Verifies if the block relay can be upgraded
+  /// @return true if contract is upgradable
+  function isUpgradable() external pure returns(bool);
+
 }

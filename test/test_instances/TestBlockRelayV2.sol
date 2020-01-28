@@ -56,11 +56,11 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   /// @param _element the leaf to be verified
   /// @return true or false depending the validity
   function verifyDrPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   returns(bool)
   {
@@ -80,11 +80,11 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   /// @param _element the element
   /// @return true or false depending the validity
   function verifyTallyPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   returns(bool)
   {
@@ -101,11 +101,17 @@ contract TestBlockRelayV2 is BlockRelayInterface {
    /// @dev Read the beacon of the last block inserted
   /// @return bytes to be signed by bridge nodes
   function getLastBeacon()
-    public
+    external
     view
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @dev Verifies if the contract is upgradable
+  /// @return true if the contract upgradable
+  function isUpgradable() external pure returns(bool) {
+    return true;
   }
 
   /// @dev Verifies the validity of a PoI

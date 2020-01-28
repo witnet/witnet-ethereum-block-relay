@@ -21,7 +21,7 @@ contract("Block relay Interface", accounts => {
       blockRelayInstance3 = await BlockRelayV3.new({
         from: accounts[0],
       })
-      blockRelayProxy = await BlockRelayProxy.new({
+      blockRelayProxy = await BlockRelayProxy.new(blockRelayInstance2.address, {
         from: accounts[0],
       })
       await blockRelayProxy.upgradeBlockRelay(blockRelayInstance1.address, {

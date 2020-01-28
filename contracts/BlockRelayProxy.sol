@@ -17,9 +17,11 @@ contract BlockRelayProxy {
     _;
   }
 
-  constructor() public{
-    // Only the contract deployer is able to push blocks
+  constructor(address _blockRelayAddress) public {
+    // Only the contract deployer is able to change block relay controller
     owner = msg.sender;
+    blockRelayAddress = _blockRelayAddress;
+    blockRelayInstance = BlockRelayInterface(_blockRelayAddress);
   }
 
   /// @notice Returns the beacon from the last inserted block.
@@ -62,6 +64,7 @@ contract BlockRelayProxy {
   }
 
   function upgradeBlockRelay(address _newAddress) public onlyOwner notIdentical(_newAddress) {
+    require(blockRelayInstance.isUpgradable(), "The block relay is not upgradable");
     blockRelayAddress = _newAddress;
     blockRelayInstance = BlockRelayInterface(_newAddress);
   }

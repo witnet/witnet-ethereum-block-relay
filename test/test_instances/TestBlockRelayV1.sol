@@ -57,30 +57,6 @@ contract TestBlockRelayV1 is BlockRelayInterface {
     _;
   }
 
-  /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
-  /// @param _blockHash Hash of the block header
-  /// @return Requests-only merkle root hash in the block header.
-  function readDrMerkleRoot(uint256 _blockHash)
-    public
-    view
-    blockExists(_blockHash)
-  returns(uint256 drMerkleRoot)
-    {
-    drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
-  }
-
-  /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
-  /// @param _blockHash Hash of the block header
-  /// tallies-only merkle root hash in the block header.
-  function readTallyMerkleRoot(uint256 _blockHash)
-    public
-    view
-    blockExists(_blockHash)
-  returns(uint256 tallyMerkleRoot)
-  {
-    tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
-  }
-
   /// @dev Verifies the validity of a PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
   /// @param _blockHash the blockHash
@@ -88,11 +64,11 @@ contract TestBlockRelayV1 is BlockRelayInterface {
   /// @param _element the leaf to be verified
   /// @return true or false depending the validity
   function verifyDrPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   blockExists(_blockHash)
   returns(bool)
@@ -113,11 +89,11 @@ contract TestBlockRelayV1 is BlockRelayInterface {
   /// @param _element the element
   /// @return true or false depending the validity
   function verifyTallyPoi(
-    uint256[] memory _poi,
+    uint256[] calldata _poi,
     uint256 _blockHash,
     uint256 _index,
     uint256 _element)
-  public
+  external
   view
   blockExists(_blockHash)
   returns(bool)
@@ -134,11 +110,17 @@ contract TestBlockRelayV1 is BlockRelayInterface {
   /// @dev Read the beacon of the last block inserted
   /// @return bytes to be signed by bridge nodes
   function getLastBeacon()
-    public
+    external
     view
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @dev Verifies if the contract is upgradable
+  /// @return true if the contract upgradable
+  function isUpgradable() external pure returns(bool) {
+    return true;
   }
 
   /// @dev Verifies the validity of a PoI
@@ -170,4 +152,5 @@ contract TestBlockRelayV1 is BlockRelayInterface {
     root = _root + 1;
     return true;
   }
+
 }
