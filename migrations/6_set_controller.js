@@ -1,5 +1,5 @@
 var BlockRelayProxy = artifacts.require("BlockRelayProxy")
-var BlockRelayController = artifacts.require("NewBlockRelay")
+var BlockRelayController = artifacts.require("ABSBlockRelay")
 
 module.exports = async (deployer, network) => {
     console.log(`> Setting BlockRelayController`)

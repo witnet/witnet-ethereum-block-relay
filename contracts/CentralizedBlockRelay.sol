@@ -1,12 +1,15 @@
 pragma solidity ^0.5.0;
 
+import "./BlockRelayInterface.sol";
 
 /**
  * @title Block relay contract
  * @notice Contract to store/read block headers from the Witnet network
  * @author Witnet Foundation
  */
-contract BlockRelay {
+
+
+contract CentralizedBlockRelay  is BlockRelayInterface {
 
   struct MerkleRoots {
     // hash of the merkle root of the DRs in Witnet

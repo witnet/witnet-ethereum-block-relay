@@ -1,7 +1,6 @@
 pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
 
-import "../../contracts/NewBlockRelay.sol";
+import "../../contracts/ABSBlockRelay.sol";
 
 /**
  * @title Test Helper for the new block Relay contract
@@ -10,8 +9,8 @@ import "../../contracts/NewBlockRelay.sol";
  */
 
 
-contract NewBRTestHelper is NewBlockRelay {
-  NewBlockRelay br;
+contract ABSBRTestHelper is ABSBlockRelay {
+  ABSBlockRelay br;
   uint256 timestamp;
   uint256 witnetGenesis;
   uint256 firstBlock;
@@ -19,7 +18,7 @@ contract NewBRTestHelper is NewBlockRelay {
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress)
-  NewBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
+  ABSBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
 
   // Updates the currentEpoch
   function updateEpoch() public view returns (uint256) {
@@ -42,7 +41,7 @@ contract NewBRTestHelper is NewBlockRelay {
     uint256 _epoch,
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot,
-    uint256 _previousVote) public returns(uint256)
+    uint256 _previousVote) public pure returns(uint256)
     {
     uint256 vote = uint256(
       sha256(
@@ -58,7 +57,7 @@ contract NewBRTestHelper is NewBlockRelay {
   }
 
   // Gets the blockHash of a vote finalized in a specific epoch
-  function getBlockHash(uint256 _epoch) public  returns (uint256) {
+  function getBlockHash(uint256 _epoch) public  view returns (uint256) {
     uint256 blockHash = epochFinalizedBlock[_epoch];
     return blockHash;
   }
@@ -69,7 +68,7 @@ contract NewBRTestHelper is NewBlockRelay {
   }
 
   // Checks if the epoch is finalized
-  function checkEpochFinalized(uint256 _epoch) public returns (bool) {
+  function checkEpochFinalized(uint256 _epoch) public view returns (bool) {
     if (epochFinalizedBlock[_epoch] != 0) {
       return true;
     }

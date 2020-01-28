@@ -5,13 +5,14 @@ import "./BlockRelayInterface.sol";
 
 
 /**
- * @title New Block relay contract
- * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality
+ * @title ABS Block relay contract
+ * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality bsaed on the Active Bridge Set (ABS)
  * @dev More information can be found here https://github.com/witnet/research/blob/master/bridge/docs/BFT_finality.md
  * DISCLAIMER: this is a work in progress, meaning the contract could be voulnerable to attacks
  * @author Witnet Foundation
  */
-contract NewBlockRelay is BlockRelayInterface {
+
+contract ABSBlockRelay is BlockRelayInterface {
 
 
   struct MerkleRoots {

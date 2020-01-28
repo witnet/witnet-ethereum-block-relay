@@ -1,12 +1,12 @@
-const BlockRelay = artifacts.require("BlockRelay")
+const CentralizedBlockRelay = artifacts.require("CentralizedBlockRelay")
 const sha = require("js-sha256")
 const truffleAssert = require("truffle-assertions")
 
-contract("Block relay", accounts => {
-  describe("Block relay test suite", () => {
+contract("Centralized Block relay", accounts => {
+  describe("Centralized Block relay test suite", () => {
     let blockRelayInstance
     before(async () => {
-      blockRelayInstance = await BlockRelay.new({
+      blockRelayInstance = await CentralizedBlockRelay.new({
         from: accounts[0],
       })
     })
