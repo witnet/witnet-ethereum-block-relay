@@ -37,7 +37,6 @@ The finality implemented in this contract is foundamental for the final purpose 
 Limitations:
 
 1. When a block is finalized by the ABS, it finalizes the previous pending ones (if needed). This means that may happen that the members of ABS for an epoch _n_ are the ones finalizing votes for epochs in which they were not members.
-2. It is necessary to implement a non-double-voting modifier to prevent an ABS member voting several times for the same vote.
 
 ## Contracts
 
