@@ -1,6 +1,4 @@
 pragma solidity ^0.5.0;
-
-
 /**
  * @title Block Relay Interface
  * @notice Interface of a Block Relay to a Witnet network
@@ -42,6 +40,6 @@ interface BlockRelayInterface {
 
   /// @notice Verifies if the block relay can be upgraded
   /// @return true if contract is upgradable
-  function isUpgradable() external pure returns(bool);
+  function isUpgradable(address _address) external view returns(bool);
 
 }

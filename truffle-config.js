@@ -11,19 +11,25 @@ module.exports = {
       provider: require("ganache-cli").provider({ gasLimit: 100000000, seed: 1234 }),
       network_id: "*",
     },
-    local: {
-      host: "127.0.0.1",     // Localhost (default: none)
-      port: 8545,            // Standard Ethereum port (default: none)
-      network_id: "*",       // Any network (default: none)
-    },
     ropsten: {
-      network_id: 3,       // Ropsten's id
-      host: "127.0.0.1",   // Localhost (default: none)
-      port: 8545,          // Standard Ethereum port (default: none)
-      gas: 8000029,        // Ropsten has a lower block limit than mainnet
-      confirmations: 2,    // # of confs to wait between deployments. (default: 0)
-      timeoutBlocks: 200,  // # of blocks before a deployment times out  (minimum/default: 50)
-      skipDryRun: true     // Skip dry run before migrations? (default: false for public nets )
+      network_id: 3,
+      host: "localhost",
+      port: 8543,
+    },
+    rinkeby: {
+      network_id: 4,
+      host: "localhost",
+      port: 8544,
+    },
+    goerli: {
+      network_id: 5,
+      host: "localhost",
+      port: 8545,
+    },
+    kovan: {
+      network_id: 42,
+      host: "localhost",
+      port: 8542,
     },
   },
   // Set default mocha options here, use special reporters etc.

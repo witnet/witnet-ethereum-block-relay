@@ -1,5 +1,7 @@
 pragma solidity ^0.5.0;
+
 import "./BlockRelayInterface.sol";
+
 
 /**
  * @title Block Relay Proxy
@@ -8,26 +10,17 @@ import "./BlockRelayInterface.sol";
  * DISCLAIMER: this is a work in progress, meaning the contract could be voulnerable to attacks
  * @author Witnet Foundation
  */
-
-
 contract BlockRelayProxy {
+
   address public blockRelayAddress;
-  address owner;
   BlockRelayInterface blockRelayInstance;
 
-  modifier onlyOwner() {
-    require(msg.sender == owner, "Permission denied");
-    _;
-  }
-
   modifier notIdentical(address _newAddress) {
-    require(_newAddress != blockRelayAddress, "The Block Relay instance is already upgraded");
+    require(_newAddress != blockRelayAddress, "The provided Block Relay instance address is already in use");
     _;
   }
 
   constructor(address _blockRelayAddress) public {
-    // Only the contract deployer is able to change block relay controller
-    owner = msg.sender;
     blockRelayAddress = _blockRelayAddress;
     blockRelayInstance = BlockRelayInterface(_blockRelayAddress);
   }
@@ -77,10 +70,10 @@ contract BlockRelayProxy {
       _element);
   }
 
-  /// @notice Upgrades the block relay if valid
+  /// @notice Upgrades the block relay if the current one is upgradeable
   /// @param _newAddress address of the new block relay to upgrade
-  function upgradeBlockRelay(address _newAddress) public onlyOwner notIdentical(_newAddress) {
-    require(blockRelayInstance.isUpgradable(), "The block relay is not upgradable");
+  function upgradeBlockRelay(address _newAddress) public notIdentical(_newAddress) {
+    require(blockRelayInstance.isUpgradable(msg.sender), "The upgrade has been rejected by the current implementation");
     blockRelayAddress = _newAddress;
     blockRelayInstance = BlockRelayInterface(_newAddress);
   }

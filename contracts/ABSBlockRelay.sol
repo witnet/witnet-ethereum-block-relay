@@ -11,9 +11,7 @@ import "./BlockRelayInterface.sol";
  * DISCLAIMER: this is a work in progress, meaning the contract could be voulnerable to attacks
  * @author Witnet Foundation
  */
-
 contract ABSBlockRelay is BlockRelayInterface {
-
 
   struct MerkleRoots {
     // Hash of the merkle root of the DRs in Witnet
@@ -68,6 +66,9 @@ contract ABSBlockRelay is BlockRelayInterface {
   // Initializes the active identities in the ABS
   uint256 activeIdentities;
 
+  // Witnet address
+  address witnet;
+
   ABSInterface wbi;
 
   // Last block reported
@@ -81,15 +82,6 @@ contract ABSBlockRelay is BlockRelayInterface {
 
   // Map an epoch to the finalized blockHash
   mapping(uint256 => uint256) internal epochFinalizedBlock;
-
-  constructor(
-    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress) public{
-    // Set the first epoch in Witnet plus the epoch duration when deploying the contract
-    witnetGenesis = _witnetGenesis;
-    epochSeconds = _epochSeconds;
-    firstBlock = _firstBlock;
-    wbi = ABSInterface(_wbiAddress);
-  }
 
   // Ensure block exists
   modifier blockExists(uint256 _id){
@@ -117,6 +109,12 @@ contract ABSBlockRelay is BlockRelayInterface {
     _;
   }
 
+  // Only the owner should be able to push blocks
+  modifier isOwner() {
+    require(msg.sender == witnet, "Sender not authorized"); // If it is incorrect here, it reverts.
+    _; // Otherwise, it continues.
+  }
+
   // Ensure the epoch for which the block is been proposed is valid
   // Valid if it is one epoch before the current epoch
   modifier epochValid(uint256 _epoch){
@@ -126,6 +124,16 @@ contract ABSBlockRelay is BlockRelayInterface {
     }
     require(currentEpoch - 1 == _epoch, "Proposing a block for a non valid epoch");
     _;
+  }
+
+  constructor(
+    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress) public{
+    // Set the first epoch in Witnet plus the epoch duration when deploying the contract
+    witnetGenesis = _witnetGenesis;
+    epochSeconds = _epochSeconds;
+    firstBlock = _firstBlock;
+    wbi = ABSInterface(_wbiAddress);
+    witnet = msg.sender;
   }
 
   /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
@@ -154,8 +162,11 @@ contract ABSBlockRelay is BlockRelayInterface {
 
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
-  function isUpgradable() external pure returns(bool) {
-    return true;
+  function isUpgradable(address _address) external view returns(bool) {
+    if (_address == witnet) {
+      return true;
+    }
+    return false;
   }
 
   /// @dev Read the beacon of the last block inserted
@@ -237,10 +248,11 @@ contract ABSBlockRelay is BlockRelayInterface {
     blockDoesNotExist(_blockHash)
     returns(bytes32)
   {
-    // If the porposal epoch chancges try to post the block with more votes
+    // If the porposal epoch changes try to post the block that got more votes
+    // and restart counting votesn for the new proposalEpoch
     if (currentEpoch > proposalEpoch) {
-      // If it has not, the set the epoch to pending
-      if (3*voteInfo[winnerVote].numberOfVotes >= 2*activeIdentities) {
+      // If consensus is achieved, call postNewBlock
+      if (3 * voteInfo[winnerVote].numberOfVotes >= 2 * activeIdentities) {
         // If it has achieved consensus, post the block
         postNewBlock(
           winnerVote,
@@ -260,7 +272,7 @@ contract ABSBlockRelay is BlockRelayInterface {
       proposalEpoch = currentEpoch;
     }
 
-    // Hash of the elements of the votation
+    // Hash of the elements of the vote
     uint256 vote = uint256(
       sha256(
         abi.encodePacked(
@@ -282,7 +294,7 @@ contract ABSBlockRelay is BlockRelayInterface {
 
     // Sum one vote
     voteInfo[vote].numberOfVotes += 1;
-    // Update the block with more votes
+    // If needed, update the block that has more votes
     if (vote != winnerVote) {
       // Set as new winner if it has more votes
       if (voteInfo[vote].numberOfVotes > voteInfo[winnerVote].numberOfVotes) {
@@ -291,8 +303,7 @@ contract ABSBlockRelay is BlockRelayInterface {
         winnerEpoch = _epoch;
         winnerDrMerkleRoot = _drMerkleRoot;
         winnerTallyMerkleRoot = _tallyMerkleRoot;
-    }
-
+      }
     }
 
     return bytes32(vote);
@@ -359,7 +370,7 @@ contract ABSBlockRelay is BlockRelayInterface {
     }
     delete candidates;
 
-    // Redefine the blockHash and the epoch so it is not deleted when fanalized
+    // Redefine the blockHash and the epoch so it is not deleted when finalized
     voteInfo[_vote].voteHashes.blockHash = _blockHash;
     voteInfo[_vote].voteHashes.epoch = _epoch;
 
@@ -384,15 +395,15 @@ contract ABSBlockRelay is BlockRelayInterface {
     uint256 index = _index;
     // We want to prove that the hash of the _poi and the _element is equal to _root
     // For knowing if concatenate to the left or the right we check the parity of the the index
-    for (uint i = 0; i<_poi.length; i++) {
+    for (uint i = 0; i < _poi.length; i++) {
       if (index%2 == 0) {
         tree = uint256(sha256(abi.encodePacked(tree, _poi[i])));
       } else {
         tree = uint256(sha256(abi.encodePacked(_poi[i], tree)));
       }
-      index = index>>1;
+      index = index >> 1;
     }
-    return _root==tree;
+    return _root == tree;
   }
 
 }

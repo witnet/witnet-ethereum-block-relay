@@ -1,6 +1,4 @@
 pragma solidity ^0.5.0;
-
-
 /**
  * @title ABS Interface
  * @notice Interface of a WBI with ABS methods
@@ -11,12 +9,8 @@ pragma solidity ^0.5.0;
  */
 interface ABSInterface {
 
-  //ActiveBridgeSet public abs;
-
   function isABSMember(address _address) external view returns (bool);
 
   function absCount() external view returns (uint32);
-
-
 
 }

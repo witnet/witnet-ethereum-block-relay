@@ -2,13 +2,12 @@ pragma solidity ^0.5.0;
 
 import "../ABSInterface.sol";
 
+
 /**
  * @title Mock of the wbi to get the ABS interface methods
  * @dev The aim of this contract is to mock the ABS methods for testing purposes
  * @author Witnet Foundation
  */
-
-
 contract ABSMock is ABSInterface {
 
   mapping(address => bool) fakeABS;
@@ -28,7 +27,7 @@ contract ABSMock is ABSInterface {
     }
   }
 
-    // Gets the number of active identities in the ABS
+  // Gets the number of active identities in the ABS
   function absCount() external view returns (uint32) {
     return count;
   }
@@ -37,10 +36,5 @@ contract ABSMock is ABSInterface {
   function setAbsIdentitiesNumber(uint32 _identitiesNumber) external returns (uint256) {
     count = _identitiesNumber;
   }
-
-
-
-
-
 
 }

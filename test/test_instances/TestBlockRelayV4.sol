@@ -2,13 +2,12 @@ pragma solidity ^0.5.0;
 
 import "../../contracts/BlockRelayInterface.sol";
 
+
 /**
  * @title Block relay contract for testing purposes
  * @notice Contract to store/read block headers from the Witnet network
  * @author Witnet Foundation
  */
-
-
 contract TestBlockRelayV4 is BlockRelayInterface {
 
   struct MerkleRoots {
@@ -37,11 +36,6 @@ contract TestBlockRelayV4 is BlockRelayInterface {
   // Event emitted when a new block is posted to the contract
   event NewBlock(address indexed _from, uint256 _id);
 
-  constructor() public{
-    // Only the contract deployer is able to push blocks
-    witnet = msg.sender;
-  }
-
   // Only the owner should be able to push blocks
   modifier isOwner() {
     require(msg.sender == witnet, "Sender not authorized"); // If it is incorrect here, it reverts.
@@ -56,6 +50,11 @@ contract TestBlockRelayV4 is BlockRelayInterface {
   modifier blockDoesNotExist(uint256 _id){
     require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
     _;
+  }
+
+  constructor() public{
+    // Only the contract deployer is able to push blocks
+    witnet = msg.sender;
   }
 
   /// @dev Verifies the validity of a PoI against the DR merkle root
@@ -120,7 +119,7 @@ contract TestBlockRelayV4 is BlockRelayInterface {
 
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
-  function isUpgradable() external pure returns(bool) {
+  function isUpgradable(address _address) external view returns(bool) {
     return false;
   }
 
@@ -142,13 +141,13 @@ contract TestBlockRelayV4 is BlockRelayInterface {
     uint256 root;
     // We want to prove that the hash of the _poi and the _element is equal to _root
     // For knowing if concatenate to the left or the right we check the parity of the the index
-    for (uint i = 0; i<_poi.length; i++) {
+    for (uint i = 0; i < _poi.length; i++) {
       if (index%2 == 0) {
         tree = uint256(sha256(abi.encodePacked(tree, _poi[i])));
       } else {
         tree = uint256(sha256(abi.encodePacked(_poi[i], tree)));
       }
-      index = index>>1;
+      index = index >> 1;
     }
     root = _root + 1;
     return true;

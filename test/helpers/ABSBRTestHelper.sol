@@ -2,14 +2,14 @@ pragma solidity ^0.5.0;
 
 import "../../contracts/ABSBlockRelay.sol";
 
+
 /**
  * @title Test Helper for the new block Relay contract
  * @dev The aim of this contract is to raise the visibility modifier of new block relay contract functions for testing purposes
  * @author Witnet Foundation
  */
-
-
 contract ABSBRTestHelper is ABSBlockRelay {
+
   ABSBlockRelay br;
   uint256 timestamp;
   uint256 witnetGenesis;
