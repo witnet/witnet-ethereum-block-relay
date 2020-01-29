@@ -1,6 +1,7 @@
 const CentralizedBlockRelay = artifacts.require("CentralizedBlockRelay")
 const sha = require("js-sha256")
 const truffleAssert = require("truffle-assertions")
+const testdata = require("./poi.json")
 
 contract("Centralized Block relay", accounts => {
   describe("Centralized Block relay test suite", () => {
@@ -10,6 +11,7 @@ contract("Centralized Block relay", accounts => {
         from: accounts[0],
       })
     })
+  
     it("should post a new block in the block relay", async () => {
       const expectedId = "0x" + sha.sha256("first id")
       const epoch = 1
@@ -31,6 +33,7 @@ contract("Centralized Block relay", accounts => {
       const beacon = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon, web3.utils.bytesToHex(concatenated))
     })
+  
     it("should revert when inserting the same block", async () => {
       const expectedId = "0x" + sha.sha256("first id")
       const epoch = 1
@@ -40,6 +43,7 @@ contract("Centralized Block relay", accounts => {
         from: accounts[0],
       }), "The block already existed")
     })
+  
     it("should insert another block", async () => {
       const expectedId = "0x" + sha.sha256("second id")
       const epoch = 2
@@ -60,6 +64,7 @@ contract("Centralized Block relay", accounts => {
       const beacon = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon, web3.utils.bytesToHex(concatenated))
     })
+  
     it("should revert because an invalid address is trying to insert", async () => {
       const expectedId = "0x" + sha.sha256("third id")
       const epoch = 3
@@ -69,6 +74,7 @@ contract("Centralized Block relay", accounts => {
         from: accounts[1],
       }), "Sender not authorized")
     })
+  
     it("should read the first blocks merkle roots", async () => {
       const expectedId = "0x" + sha.sha256("first id")
       const drRoot = await blockRelayInstance.readDrMerkleRoot.call(expectedId, {
@@ -80,6 +86,7 @@ contract("Centralized Block relay", accounts => {
       assert.equal(drRoot, 1)
       assert.equal(tallyRoot, 1)
     })
+  
     it("should read the second blocks merkle roots", async () => {
       const expectedId = "0x" + sha.sha256("second id")
       const drRoot = await blockRelayInstance.readDrMerkleRoot.call(expectedId, {
@@ -91,6 +98,7 @@ contract("Centralized Block relay", accounts => {
       assert.equal(drRoot, 2)
       assert.equal(tallyRoot, 3)
     })
+  
     it("should revert for trying to read from a non-existent block", async () => {
       const expectedId = "0x" + sha.sha256("forth id")
       await truffleAssert.reverts(blockRelayInstance.readDrMerkleRoot(expectedId, {
@@ -100,6 +108,32 @@ contract("Centralized Block relay", accounts => {
         from: accounts[1],
       }), "Non-existing block")
     })
+
+    for (const [index, test] of testdata.poi.valid.entries()) {
+      it(`poi (${index + 1})`, async () => {
+        const poi = test.poi
+        const root = test.root
+        const index = test.index
+        const element = test.element
+        const epoch = test.epoch
+        await blockRelayInstance.postNewBlock(epoch, epoch, root, root)
+        const result = await blockRelayInstance.verifyDrPoi.call(poi, epoch, index, element)
+        assert(result)
+      })
+    }
+  
+    for (const [index, test] of testdata.poi.invalid.entries()) {
+      it(`invalid poi (${index + 1})`, async () => {
+        const poi = test.poi
+        const root = test.root
+        const index = test.index
+        const element = test.element
+        const epoch = test.epoch
+        await blockRelayInstance.postNewBlock(epoch, epoch, root, root)
+        const result = await blockRelayInstance.verifyDrPoi.call(poi, epoch, index, element)
+        assert.notEqual(result, true)
+      })
+    }
   })
 })
 
