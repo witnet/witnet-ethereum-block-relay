@@ -1,7 +1,7 @@
 {
-  "name": "witnet-ethereum-bridge",
+  "name": "witnet-ethereum-block-relay",
   "version": "0.1.0",
-  "description": "Witnet-Ethereum Bridge Interface",
+  "description": "Witnet-Ethereum Block Relay",
   "main": "",
   "scripts": {
     "test": "truffle test",
@@ -19,7 +19,7 @@
   "author": "Witnet Foundation <info@witnet.foundation>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/witnet/witnet-ethereum-bridge.git"
+    "url": "https://github.com/witnet/witnet-ethereum-block-relay.git"
   },
   "keywords": [
     "bridge",
