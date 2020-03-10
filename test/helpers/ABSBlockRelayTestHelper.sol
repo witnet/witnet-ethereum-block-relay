@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../../contracts/ABSBlockRelay.sol";
+import "../../contracts/ActiveBridgeSetBlockRelay.sol";
 
 
 /**
@@ -8,9 +8,9 @@ import "../../contracts/ABSBlockRelay.sol";
  * @dev The aim of this contract is to raise the visibility modifier of new block relay contract functions for testing purposes
  * @author Witnet Foundation
  */
-contract ABSBRTestHelper is ABSBlockRelay {
+contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
 
-  ABSBlockRelay br;
+  ActiveBridgeSetBlockRelay br;
   uint256 timestamp;
   uint256 witnetGenesis;
   uint256 firstBlock;
@@ -18,7 +18,7 @@ contract ABSBRTestHelper is ABSBlockRelay {
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress)
-  ABSBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
+  ActiveBridgeSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
 
   // Updates the currentEpoch
   function updateEpoch() public view returns (uint256) {

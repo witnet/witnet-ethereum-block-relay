@@ -1,6 +1,6 @@
 const sha = require("js-sha256")
-const ABSBRTestHelper = artifacts.require("ABSBRTestHelper")
-const ABSMock = artifacts.require("ABSMock")
+const ABSBlockRelayTestHelper = artifacts.require("ABSBlockRelayTestHelper")
+const ABSMock = artifacts.require("ActiveBridgeSetMock")
 const truffleAssert = require("truffle-assertions")
 contract("ABS Block Relay", accounts => {
   describe("ABS block relay test suite", () => {
@@ -11,7 +11,7 @@ contract("ABS Block Relay", accounts => {
         from: accounts[0],
       })
 
-      contest = await ABSBRTestHelper.new(1568559600, 90, 0, abs.address, {
+      contest = await ABSBlockRelayTestHelper.new(1568559600, 90, 0, abs.address, {
         from: accounts[0],
       })
     })

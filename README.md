@@ -2,8 +2,7 @@
 
 `witnet-ethereum-block-relay` is an open source implementation of Witnet Block Relay for EVM-compatible blockchains.
 
-
- DISCLAIMER: this is a work in progress, by which we mean the contract could still be vulnerable to attack. Use at your own risk.
+DISCLAIMER: this is a work in progress, by which we mean the contract could still be vulnerable to attack. Use at your own risk.
 
 ## About WBI and the Block Relay
 
@@ -24,7 +23,7 @@ The following diagram shows the flow between the WBI and the Block Relay.
 
 ## BlockRelay based on ABS
 
-The `ABSBlockRelay` is a work in progress contract that implements the Active Bridge Set (ABS) as the set in charge of proposing and posting blocks to the Block Relay. The ABS is a subset of bridge nodes and is updated in the contract when posting a block through the WBI.
+The `ActiveBridgeSetBlockRelay` is a work in progress contract that implements the Active Bridge Set (ABS) as the set in charge of proposing and posting blocks to the Block Relay. The ABS is a subset of bridge nodes and is updated in the contract when posting a block through the WBI.
 
 A block header is later finalized when 2/3 of the ABS agree on a vote. More precisely, the flow is as follows:
 
@@ -119,9 +118,9 @@ The `CentralizedBlockRelay` contract contains the following methods:
     - *_index* the index in the merkle tree of the element to verify
     - *_element* the leaf to be verified
 
-### ABSBlockRelay
+### ActiveBridgeSetBlockRelay
 
-The `ABSBlockRelay` contract is similar to the `CentralizedBlockRelay` but instead of being centralized, the members of the ABS are in charge of proposing blocks.
+The `ActiveBridgeSetBlockRelay` contract is similar to the `CentralizedBlockRelay` but instead of being centralized, the members of the ABS are in charge of proposing blocks.
 The following functions differ from the `CentralizedBlockRelay`:
 
 - **proposeBlock**:
@@ -146,7 +145,7 @@ The following functions differ from the `CentralizedBlockRelay`:
 ## Known limitations:
 
 - `CentralizedBlockRelay`: as the name suggests, this block relay is centralized, only the deployer of the contract is able to push blocks.
-- `ABSBlockRelay`: the ABS stays the same until a block is finalized. A block can be proposed more than once by the same ABS member and only for one epoch previous to the current epoch.
+- `ActiveBridgeSetBlockRelay`: the ABS stays the same until a block is finalized. A block can be proposed more than once by the same ABS member and only for one epoch previous to the current epoch.
 
 ## Future steps
 
