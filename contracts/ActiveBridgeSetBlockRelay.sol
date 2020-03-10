@@ -1,17 +1,17 @@
 pragma solidity ^0.5.0;
 
-import "./ABSInterface.sol";
+import "./ABSWitnetRequestsBoardInterface.sol";
 import "./BlockRelayInterface.sol";
 
 
 /**
- * @title ABS Block relay contract
+ * @title Active Bridge Set Block relay contract
  * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality bsaed on the Active Bridge Set (ABS)
  * @dev More information can be found here https://github.com/witnet/research/blob/master/bridge/docs/BFT_finality.md
  * DISCLAIMER: this is a work in progress, meaning the contract could be voulnerable to attacks
  * @author Witnet Foundation
  */
-contract ABSBlockRelay is BlockRelayInterface {
+contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
   struct MerkleRoots {
     // Hash of the merkle root of the DRs in Witnet
@@ -72,7 +72,7 @@ contract ABSBlockRelay is BlockRelayInterface {
   // Witnet address
   address witnet;
 
-  ABSInterface wbi;
+  ABSWitnetRequestsBoardInterface wbi;
 
   // Last block reported
   Beacon public lastBlock;
@@ -138,7 +138,7 @@ contract ABSBlockRelay is BlockRelayInterface {
     witnetGenesis = _witnetGenesis;
     epochSeconds = _epochSeconds;
     firstBlock = _firstBlock;
-    wbi = ABSInterface(_wbiAddress);
+    wbi = ABSWitnetRequestsBoardInterface(_wbiAddress);
     witnet = msg.sender;
   }
 

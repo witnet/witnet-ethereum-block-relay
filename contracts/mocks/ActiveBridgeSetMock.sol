@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
-import "../ABSInterface.sol";
+import "../ABSWitnetRequestsBoardInterface.sol";
 
 
 /**
- * @title Mock of the wbi to get the ABS interface methods
+ * @title Mock of the Witnet Requests Board to get the ABSWitnetRequestsBoardInterface methods
  * @dev The aim of this contract is to mock the ABS methods for testing purposes
  * @author Witnet Foundation
  */
-contract ABSMock is ABSInterface {
+contract ActiveBridgeSetMock is ABSWitnetRequestsBoardInterface {
 
   mapping(address => bool) fakeABS;
 
