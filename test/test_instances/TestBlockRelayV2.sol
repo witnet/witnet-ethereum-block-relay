@@ -47,6 +47,22 @@ contract TestBlockRelayV2 is BlockRelayInterface {
     witnet = msg.sender;
   }
 
+  function postNewBlock(
+    uint256 _blockHash,
+    uint256 _epoch,
+    uint256 _drMerkleRoot,
+    uint256 _tallyMerkleRoot)
+    external
+    isOwner
+  {
+    uint256 id = _blockHash;
+    lastBlock.blockHash = id;
+    lastBlock.epoch = _epoch;
+    blocks[id].drHashMerkleRoot = _drMerkleRoot;
+    blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
+    emit NewBlock(msg.sender, id);
+  }
+
   /// @dev Verifies the validity of a PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
   /// @param _blockHash the blockHash
@@ -62,13 +78,7 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   view
   returns(bool)
   {
-    uint256 drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
-    verifyPoi(
-      _poi,
-      drMerkleRoot,
-      _index,
-      _element);
-    return true;
+    return false;
   }
 
   /// @dev Verifies the validity of a PoI against the tally merkle root
@@ -104,6 +114,18 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256) {
+    return lastBlock.epoch;
+  }
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256) {
+    return lastBlock.blockHash;
   }
 
   /// @dev Verifies if the contract is upgradable

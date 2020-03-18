@@ -2,7 +2,7 @@
 
 `witnet-ethereum-block-relay` is an open source implementation of Witnet Block Relay for EVM-compatible blockchains.
 
-DISCLAIMER: this is a work in progress, by which we mean the contract could still be vulnerable to attack. Use at your own risk.
+DISCLAIMER: this is a work in progress, by which we mean the contract could still be vulnerable to attacks. Use at your own risk.
 
 ## About WBI and the Block Relay
 
@@ -20,6 +20,10 @@ The following diagram shows the flow between the WBI and the Block Relay.
 <p align=center>
 <em>Fig. 1: Connecting the WBI to the Block Relay.</em>
 </p>
+
+The proxy contract has the `upgradeBlockRelay` function which is in charge of asking the controller if replacing it is allowed. If it is, the controller to which the proxy points can be changed.
+
+In order not to lose the state of the replaced controller, the proxy maintains a mapping between the last block stored by each of the controllers. When asking for a specific block in a specific epoch, the proxy derives the controller it should ask to, and computes operations against it. In summary, the state of the replaced controllers is maintained. This is important, as replacing block relay controllers without taking into account previous states might leave data requests in an unverifiable state.
 
 ## BlockRelay based on ABS
 
@@ -60,6 +64,7 @@ The `BlockRelayProxy` is the proxy contract called by the WBI when deployed. It 
   - _inputs_:
     - *_poi_*: proof of inclusion as [sibling1, sibling2,..].
     - *_blockHash* the blockHash
+    - *_epoch*: the epoch the block was proposed for.
     - *_index* the index in the merkle tree of the element to verify
     - *_element* the leaf to be verified
 
@@ -68,8 +73,17 @@ The `BlockRelayProxy` is the proxy contract called by the WBI when deployed. It 
   - _inputs_:
     - *_poi_*: proof of inclusion as [sibling1, sibling2,..].
     - *_blockHash* the blockHash
+    - *_epoch*: the epoch the block was proposed for.
     - *_index* the index in the merkle tree of the element to verify
     - *_element* the leaf to be verified
+
+- **getController**:
+  - _description_: selects the controller based on the epoch
+  - _inputs_:
+    - _epoch_: the epoch which we want to work withs
+  - _output_:
+    - the address of the corresponding controller.
+  
 
 ### CentralizedBlockRelay
 

@@ -47,6 +47,18 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     witnet = msg.sender;
   }
 
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256) {
+    return lastBlock.epoch;
+  }
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256) {
+    return lastBlock.blockHash;
+  }
+
   /// @dev Verifies the validity of a PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
   /// @param _blockHash the blockHash
@@ -86,14 +98,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
   view
   returns(bool)
   {
-    uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
-    if (verifyPoi(
-      _poi,
-      tallyMerkleRoot,
-      _index,
-      _element) == true) {
-      return false;
-      }
+    return false;
   }
 
   /// @dev Read the beacon of the last block inserted

@@ -1,20 +1,20 @@
 pragma solidity ^0.5.0;
 
-import "../ABSWitnetRequestsBoardInterface.sol";
+import "../ActiveBridgeSetInterface.sol";
 
 
 /**
- * @title Mock of the Witnet Requests Board to get the ABSWitnetRequestsBoardInterface methods
+ * @title Mock of the Witnet Requests Board to get the ActiveBridgeSetInterface methods
  * @dev The aim of this contract is to mock the ABS methods for testing purposes
  * @author Witnet Foundation
  */
-contract ActiveBridgeSetMock is ABSWitnetRequestsBoardInterface {
+contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
 
   mapping(address => bool) fakeABS;
 
   uint32 count;
 
-  function isABSMember(address _address) external view returns (bool) {
+  function absIsMember(address _address) external view returns (bool) {
     return fakeABS[_address];
   }
 

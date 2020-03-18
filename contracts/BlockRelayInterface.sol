@@ -1,4 +1,6 @@
 pragma solidity ^0.5.0;
+
+
 /**
  * @title Block Relay Interface
  * @notice Interface of a Block Relay to a Witnet network
@@ -13,6 +15,14 @@ interface BlockRelayInterface {
   /// The last beacon (in bytes) will be used by Witnet Bridge nodes to compute their eligibility.
   /// @return last beacon in bytes
   function getLastBeacon() external view returns(bytes memory);
+
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256);
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256);
 
   /// @notice Verifies the validity of a data request PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]

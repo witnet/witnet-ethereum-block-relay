@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./ABSWitnetRequestsBoardInterface.sol";
+import "./ActiveBridgeSetInterface.sol";
 import "./BlockRelayInterface.sol";
 
 
@@ -72,7 +72,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   // Witnet address
   address witnet;
 
-  ABSWitnetRequestsBoardInterface wbi;
+  ActiveBridgeSetInterface wbi;
 
   // Last block reported
   Beacon public lastBlock;
@@ -111,7 +111,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   // Ensure that the msg.sender is in the abs
   modifier isAbsMember(address _address){
 
-    require(wbi.isABSMember(_address) == true, "Not a member of the abs");
+    require(wbi.absIsMember(_address) == true, "Not a member of the abs");
     _;
   }
 
@@ -138,7 +138,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     witnetGenesis = _witnetGenesis;
     epochSeconds = _epochSeconds;
     firstBlock = _firstBlock;
-    wbi = ABSWitnetRequestsBoardInterface(_wbiAddress);
+    wbi = ActiveBridgeSetInterface(_wbiAddress);
     witnet = msg.sender;
   }
 
@@ -183,6 +183,18 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256) {
+    return lastBlock.epoch;
+  }
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256) {
+    return lastBlock.blockHash;
   }
 
   /// @dev Verifies the validity of a PoI against the DR merkle root

@@ -57,6 +57,28 @@ contract TestBlockRelayV1 is BlockRelayInterface {
     witnet = msg.sender;
   }
 
+  /// @dev Post new block into the block relay
+  /// @param _blockHash Hash of the block header
+  /// @param _epoch Witnet epoch to which the block belongs to
+  /// @param _drMerkleRoot Merkle root belonging to the data requests
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
+  function postNewBlock(
+    uint256 _blockHash,
+    uint256 _epoch,
+    uint256 _drMerkleRoot,
+    uint256 _tallyMerkleRoot)
+    external
+    isOwner
+    blockDoesNotExist(_blockHash)
+  {
+    uint256 id = _blockHash;
+    lastBlock.blockHash = id;
+    lastBlock.epoch = _epoch;
+    blocks[id].drHashMerkleRoot = _drMerkleRoot;
+    blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
+    emit NewBlock(witnet, id);
+  }
+
   /// @dev Verifies the validity of a PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
   /// @param _blockHash the blockHash
@@ -73,12 +95,6 @@ contract TestBlockRelayV1 is BlockRelayInterface {
   blockExists(_blockHash)
   returns(bool)
   {
-    uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
-    verifyPoi(
-      _poi,
-      tallyMerkleRoot,
-      _index,
-      _element);
     return true;
   }
 
@@ -115,6 +131,18 @@ contract TestBlockRelayV1 is BlockRelayInterface {
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
+  }
+
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256) {
+    return lastBlock.epoch;
+  }
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256) {
+    return lastBlock.blockHash;
   }
 
   /// @dev Verifies if the contract is upgradable

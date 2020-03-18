@@ -117,6 +117,18 @@ contract TestBlockRelayV4 is BlockRelayInterface {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
   }
 
+  /// @notice Returns the lastest epoch reported to the block relay.
+  /// @return epoch
+  function getLastEpoch() external view returns(uint256) {
+    return lastBlock.epoch;
+  }
+
+  /// @notice Returns the latest hash reported to the block relay
+  /// @return blockhash
+  function getLastHash() external view returns(uint256) {
+    return lastBlock.blockHash;
+  }
+
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
   function isUpgradable(address _address) external view returns(bool) {
