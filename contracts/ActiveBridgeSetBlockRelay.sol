@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.4;
 
 import "./ActiveBridgeSetInterface.sol";
 import "./BlockRelayInterface.sol";
@@ -149,26 +149,26 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     external
     view
     blockExists(_blockHash)
-  returns(uint256 drMerkleRoot)
+  returns(uint256)
     {
-    drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
+    return blocks[_blockHash].drHashMerkleRoot;
   }
 
   /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header
-  /// tallies-only merkle root hash in the block header.
+  /// @return tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
     external
     view
     blockExists(_blockHash)
-  returns(uint256 tallyMerkleRoot)
+  returns(uint256)
   {
-    tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
+    return blocks[_blockHash].tallyHashMerkleRoot;
   }
 
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
-  function isUpgradable(address _address) external view returns(bool) {
+  function isUpgradable(address _address) external view override returns(bool) {
     if (_address == witnet) {
       return true;
     }
@@ -180,6 +180,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   function getLastBeacon()
     external
     view
+    override
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
@@ -187,13 +188,13 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
   /// @notice Returns the lastest epoch reported to the block relay.
   /// @return epoch
-  function getLastEpoch() external view returns(uint256) {
+  function getLastEpoch() external view override returns(uint256) {
     return lastBlock.epoch;
   }
 
   /// @notice Returns the latest hash reported to the block relay
   /// @return blockhash
-  function getLastHash() external view returns(uint256) {
+  function getLastHash() external view override returns(uint256) {
     return lastBlock.blockHash;
   }
 
@@ -210,6 +211,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     uint256 _element)
   external
   view
+  override
   blockExists(_blockHash)
   epochIsFinalized(currentEpoch)
   returns(bool)
@@ -235,6 +237,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     uint256 _element)
   external
   view
+  override
   blockExists(_blockHash)
   returns(bool)
   {
@@ -335,7 +338,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   }
 
   /// @dev Updates the epoch
-  function updateEpoch() public view returns(uint256) {
+  function updateEpoch() public view virtual returns(uint256) {
     // solium-disable-next-line security/no-block-members
     return (block.timestamp - witnetGenesis)/epochSeconds;
   }

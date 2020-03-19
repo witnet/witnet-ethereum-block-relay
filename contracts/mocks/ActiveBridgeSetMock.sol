@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.4;
 
 import "../ActiveBridgeSetInterface.sol";
 
@@ -14,7 +14,7 @@ contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
 
   uint32 count;
 
-  function absIsMember(address _address) external view returns (bool) {
+  function absIsMember(address _address) external view override returns (bool) {
     return fakeABS[_address];
   }
 
@@ -28,7 +28,7 @@ contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
   }
 
   // Gets the number of active identities in the ABS
-  function absCount() external view returns (uint32) {
+  function absCount() external view override returns (uint32) {
     return count;
   }
 

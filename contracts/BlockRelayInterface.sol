@@ -1,6 +1,4 @@
-pragma solidity ^0.5.0;
-
-
+pragma solidity 0.6.4;
 /**
  * @title Block Relay Interface
  * @notice Interface of a Block Relay to a Witnet network

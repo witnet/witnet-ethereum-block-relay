@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.4;
 /**
  * @title Active Bridge Set Interface
  * @notice Interface of Active Bridge Set methods

@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.4;
 
 import "../../contracts/BlockRelayInterface.sol";
 
@@ -49,13 +49,13 @@ contract TestBlockRelayV3 is BlockRelayInterface {
 
   /// @notice Returns the lastest epoch reported to the block relay.
   /// @return epoch
-  function getLastEpoch() external view returns(uint256) {
+  function getLastEpoch() external view override returns(uint256) {
     return lastBlock.epoch;
   }
 
   /// @notice Returns the latest hash reported to the block relay
   /// @return blockhash
-  function getLastHash() external view returns(uint256) {
+  function getLastHash() external view override returns(uint256) {
     return lastBlock.blockHash;
   }
 
@@ -72,6 +72,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     uint256 _element)
   external
   view
+  override
   returns(bool)
   {
     uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
@@ -96,6 +97,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
     uint256 _element)
   external
   view
+  override
   returns(bool)
   {
     return false;
@@ -106,6 +108,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
   function getLastBeacon()
     external
     view
+    override
   returns(bytes memory)
   {
     return abi.encodePacked(lastBlock.blockHash, lastBlock.epoch);
@@ -113,7 +116,7 @@ contract TestBlockRelayV3 is BlockRelayInterface {
 
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
-  function isUpgradable(address _address) external view returns(bool) {
+  function isUpgradable(address _address) external view override returns(bool) {
     return true;
   }
 

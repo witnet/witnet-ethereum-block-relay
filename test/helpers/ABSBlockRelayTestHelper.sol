@@ -1,4 +1,4 @@
-pragma solidity ^0.5.0;
+pragma solidity 0.6.4;
 
 import "../../contracts/ActiveBridgeSetBlockRelay.sol";
 
@@ -12,8 +12,6 @@ contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
 
   ActiveBridgeSetBlockRelay br;
   uint256 timestamp;
-  uint256 witnetGenesis;
-  uint256 firstBlock;
 
 
   constructor (
@@ -21,7 +19,7 @@ contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
   ActiveBridgeSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
 
   // Updates the currentEpoch
-  function updateEpoch() public view returns (uint256) {
+  function updateEpoch() public view override returns (uint256) {
     return currentEpoch;
   }
 
