@@ -51,11 +51,11 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   address[] public absProposingMembers;
 
   // Initializes the block with the maximum number of votes
-  uint256 winnerVote;
-  uint256 winnerId;
-  uint256 winnerDrMerkleRoot;
-  uint256 winnerTallyMerkleRoot;
-  uint256 winnerEpoch;
+  uint256 public winnerVote;
+  uint256 public winnerId;
+  uint256 public winnerDrMerkleRoot;
+  uint256 public winnerTallyMerkleRoot;
+  uint256 public winnerEpoch;
 
   // Needed for the constructor
   uint256 witnetGenesis;
@@ -155,7 +155,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   }
 
   /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
-  /// @param _blockHash Hash of the block header
+  /// @param _blockHash Hash of the block header.
   /// @return tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
     external
@@ -166,8 +166,8 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     return blocks[_blockHash].tallyHashMerkleRoot;
   }
 
-  /// @dev Verifies if the contract is upgradable
-  /// @return true if the contract upgradable
+  /// @dev Verifies if the contract is upgradable.
+  /// @return true if the contract upgradable.
   function isUpgradable(address _address) external view override returns(bool) {
     if (_address == witnet) {
       return true;
@@ -371,8 +371,10 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     uint256 epoch = voteInfo[_previousVote].voteHashes.epoch;
     uint256 previousBlockHash = voteInfo[previousVote].voteHashes.blockHash;
 
+    uint256 lastEpoch = lastBlock.epoch;
+
     // Finalize the previous votes when the corresponding epochs are bigger than the last finalized epoch
-    while (epoch > lastBlock.epoch) {
+    while (epoch > lastEpoch) {
       epochFinalizedBlock[epoch] = previousBlockHash;
       // Map the block hash to its hashes
       blocks[previousBlockHash].drHashMerkleRoot = voteInfo[previousVote].voteHashes.drMerkleRoot;
@@ -391,8 +393,9 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     lastBlock.blockHash = _blockHash;
     lastBlock.epoch = _epoch;
 
+    uint256 candidatesLength = candidates.length;
     // Delete the condidates array so its empty for next epoch
-    for (uint i = 0; i <= candidates.length - 1; i++) {
+    for (uint i = 0; i < candidatesLength; i++) {
       delete voteInfo[candidates[i]].voteHashes;
     }
     delete candidates;
@@ -401,8 +404,9 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     voteInfo[_vote].voteHashes.blockHash = _blockHash;
     voteInfo[_vote].voteHashes.epoch = _epoch;
 
+    uint256 proposingMembersLength = absProposingMembers.length;
     // Delete the ABS members from the list of proposing members
-    for (uint i = 0; i <= absProposingMembers.length - 1; i++) {
+    for (uint i = 0; i < proposingMembersLength; i++) {
       delete addressEpoch[absProposingMembers[i]];
     }
     delete absProposingMembers;

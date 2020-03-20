@@ -27,7 +27,7 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   }
 
   // Address of the block pusher
-  address witnet;
+  address public witnet;
   // Last block reported
   Beacon public lastBlock;
 

@@ -13,9 +13,9 @@ import "./BlockRelayInterface.sol";
 contract BlockRelayProxy {
 
   // Address of the current controller
-  address blockRelayAddress;
+  address internal blockRelayAddress;
   // Current interface to the controller
-  BlockRelayInterface blockRelayInstance;
+  BlockRelayInterface internal blockRelayInstance;
 
   struct ControllerInfo {
     // last epoch seen by a controller
@@ -25,7 +25,7 @@ contract BlockRelayProxy {
   }
 
   // array containing the information about controllers
-  ControllerInfo[] controllers;
+  ControllerInfo[] internal controllers;
 
   modifier notIdentical(address _newAddress) {
     require(_newAddress != blockRelayAddress, "The provided Block Relay instance address is already in use");
@@ -93,7 +93,7 @@ contract BlockRelayProxy {
 
   /// @notice Upgrades the block relay if the current one is upgradeable
   /// @param _newAddress address of the new block relay to upgrade
-  function upgradeBlockRelay(address _newAddress) public notIdentical(_newAddress) {
+  function upgradeBlockRelay(address _newAddress) external notIdentical(_newAddress) {
     // Check if the controller is upgradeable
     require(blockRelayInstance.isUpgradable(msg.sender), "The upgrade has been rejected by the current implementation");
     // Get last epoch seen by the replaced controller

@@ -25,7 +25,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   }
 
   // Address of the block pusher
-  address witnet;
+  address public witnet;
 
   // Last block reported
   Beacon public lastBlock;
@@ -175,7 +175,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   }
 
   /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
-  /// @param _blockHash Hash of the block header
+  /// @param _blockHash Hash of the block header.
   /// @return tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
     external

@@ -1,6 +1,6 @@
 {
   "name": "witnet-ethereum-block-relay",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Witnet-Ethereum Block Relay",
   "main": "",
   "scripts": {
@@ -33,7 +33,7 @@
   "license": "GPL-3.0",
   "dependencies": {
     "openzeppelin-solidity": "2.5.0",
-    "vrf-solidity": "girazoki/vrf-solidity#chore/versions"
+    "vrf-solidity": "0.2.2"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",

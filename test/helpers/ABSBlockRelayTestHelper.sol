@@ -10,26 +10,20 @@ import "../../contracts/ActiveBridgeSetBlockRelay.sol";
  */
 contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
 
-  ActiveBridgeSetBlockRelay br;
-  uint256 timestamp;
-
+  ActiveBridgeSetBlockRelay public br;
+  uint256 public timestamp;
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress)
   ActiveBridgeSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
 
-  // Updates the currentEpoch
-  function updateEpoch() public view override returns (uint256) {
-    return currentEpoch;
-  }
-
   // Sets the current epoch to be the next
-  function nextEpoch() public {
+  function nextEpoch() external {
     currentEpoch = currentEpoch + 1;
   }
 
   // Sets the currentEpoch
-  function setEpoch(uint256 _epoch) public returns (uint256) {
+  function setEpoch(uint256 _epoch) external {
     currentEpoch = _epoch;
   }
 
@@ -39,7 +33,7 @@ contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
     uint256 _epoch,
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot,
-    uint256 _previousVote) public pure returns(uint256)
+    uint256 _previousVote) external pure returns(uint256)
     {
     uint256 vote = uint256(
       sha256(
@@ -55,21 +49,26 @@ contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
   }
 
   // Gets the blockHash of a vote finalized in a specific epoch
-  function getBlockHash(uint256 _epoch) public  view returns (uint256) {
+  function getBlockHash(uint256 _epoch) external  view returns (uint256) {
     uint256 blockHash = epochFinalizedBlock[_epoch];
     return blockHash;
   }
 
   // Gets the length of the candidates array
-  function getCandidatesLength() public view returns (uint256) {
+  function getCandidatesLength() external view returns (uint256) {
     return candidates.length;
   }
 
   // Checks if the epoch is finalized
-  function checkEpochFinalized(uint256 _epoch) public view returns (bool) {
+  function checkEpochFinalized(uint256 _epoch) external view returns (bool) {
     if (epochFinalizedBlock[_epoch] != 0) {
       return true;
     }
+  }
+
+  // Updates the currentEpoch
+  function updateEpoch() public view override returns (uint256) {
+    return currentEpoch;
   }
 
 }

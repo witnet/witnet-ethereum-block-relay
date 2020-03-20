@@ -10,9 +10,9 @@ import "../ActiveBridgeSetInterface.sol";
  */
 contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
 
-  mapping(address => bool) fakeABS;
+  mapping(address => bool) public fakeABS;
 
-  uint32 count;
+  uint32 public count;
 
   function absIsMember(address _address) external view override returns (bool) {
     return fakeABS[_address];
@@ -33,7 +33,7 @@ contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
   }
 
   // Sets the number of members in the ABS
-  function setAbsIdentitiesNumber(uint32 _identitiesNumber) external returns (uint256) {
+  function setAbsIdentitiesNumber(uint32 _identitiesNumber) external {
     count = _identitiesNumber;
   }
 
