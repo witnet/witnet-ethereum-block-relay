@@ -58,21 +58,21 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
   uint256 public winnerEpoch;
 
   // Needed for the constructor
-  uint256 witnetGenesis;
-  uint256 epochSeconds;
-  uint256 firstBlock;
+  uint256 public witnetGenesis;
+  uint256 public epochSeconds;
+  uint256 public firstBlock;
 
   // Initializes the current epoch and the epoch in which it is valid to propose blocks
-  uint256 currentEpoch;
-  uint256 proposalEpoch;
+  uint256 public currentEpoch;
+  uint256 public proposalEpoch;
 
   // Initializes the active identities in the ABS
-  uint256 activeIdentities;
+  uint256 public activeIdentities;
 
   // Witnet address
-  address witnet;
+  address public witnet;
 
-  ActiveBridgeSetInterface wbi;
+  ActiveBridgeSetInterface internal wbi;
 
   // Last block reported
   Beacon public lastBlock;
