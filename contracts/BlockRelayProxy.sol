@@ -46,6 +46,12 @@ contract BlockRelayProxy {
     return blockRelayInstance.getLastBeacon();
   }
 
+  /// @notice Returns the last Wtinet epoch known to the block relay instance.
+  /// @return The last epoch is used in the WRB to avoid reusage of PoI in a data request.
+  function getLastEpoch() external view returns(uint256) {
+    return blockRelayInstance.getLastEpoch();
+  }
+
   /// @notice Verifies the validity of a data request PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
   /// @param _blockHash the blockHash
