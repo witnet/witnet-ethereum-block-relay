@@ -154,12 +154,11 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     isOwner
     blockDoesNotExist(_blockHash)
   {
-    uint256 id = _blockHash;
-    lastBlock.blockHash = id;
+    lastBlock.blockHash = _blockHash;
     lastBlock.epoch = _epoch;
-    blocks[id].drHashMerkleRoot = _drMerkleRoot;
-    blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
-    emit NewBlock(witnet, id);
+    blocks[_blockHash].drHashMerkleRoot = _drMerkleRoot;
+    blocks[_blockHash].tallyHashMerkleRoot = _tallyMerkleRoot;
+    emit NewBlock(witnet, _blockHash);
   }
 
   /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
