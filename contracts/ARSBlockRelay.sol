@@ -30,19 +30,19 @@ contract ARSBlockRelay is BlockRelayInterface {
     uint256 previousVote;
   }
 
-//   // Struct with the hashes of a votation
-//   struct Hashes {
-//     uint256 blockHash;
-//     uint256 drMerkleRoot;
-//     uint256 tallyMerkleRoot;
-//     uint256 previousVote;
-//     uint256 epoch;
-//   }
+  // Struct with the hashes of a votation
+  struct Hashes {
+    uint256 blockHash;
+    uint256 drMerkleRoot;
+    uint256 tallyMerkleRoot;
+    uint256 previousVote;
+    uint256 epoch;
+  }
 
   struct VoteInfo {
     // Information of a Block Candidate
     uint256 numberOfVotes;
-    // Hashes voteHashes;
+    Hashes voteHashes;
   }
 
   // Needed for the constructor
@@ -54,6 +54,9 @@ contract ARSBlockRelay is BlockRelayInterface {
   // Initializes the current epoch and the epoch in which it is valid to propose blocks
   uint256 public currentEpoch;
   uint256 public proposalEpoch;
+
+  // Array with the votes for the proposed blocks
+  uint256[] public candidates;
 
     // Last block reported
   Beacon public lastBlock;
@@ -210,13 +213,42 @@ contract ARSBlockRelay is BlockRelayInterface {
     // 2. Agreggate the public keys P
     // 3. Calculate H(m) = H(_blockHash)
     // 4. Check the paring e(S,G2) = e(H(m), P)
+    // 5. Create the vote and its information
+    // 6. Update the vote count and post new block if it reaches 2/3 of the ABS
 
-    // Number of votes to the blockHash, delete the publicKeys already used (1.)
-    uint256 numberOfVotes = _publicKeys.length;
 
-    //Calculate the number of members of the ARS
-    uint256 n = _merklePath.length;
-    uint256 absMembers = 2**n;
+    // Define the vote
+    uint256 vote = createVote(
+      _blockHash,
+      _epoch,
+      _drMerkleRoot,
+      _tallyMerkleRoot,
+      _previousVote
+      //2**_merklePath.length
+    );
+
+    updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
+
+
+  }
+
+  /// @dev Create vote
+  /// @param _blockHash Hash of the block headerPost
+  /// @param _epoch Witnet epoch to which the block belongs to
+  /// @param _drMerkleRoot Merkle root belonging to the data requests
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
+  /// @param _previousVote Hash of block's hashes proposed in the previous epoch
+  function createVote(
+    uint256 _blockHash,
+    uint256 _epoch,
+    uint256 _drMerkleRoot,
+    uint256 _tallyMerkleRoot,
+    uint256 _previousVote)
+    //uint256 _absMembers)
+    private
+    blockDoesNotExist(_blockHash)
+    returns(uint256)
+  {
 
     // Define the vote
     uint256 vote = uint256(
@@ -228,19 +260,63 @@ contract ARSBlockRelay is BlockRelayInterface {
       _tallyMerkleRoot,
       _previousVote)));
 
-    // Add the votes
-    voteInfo[vote].numberOfVotes = voteInfo[vote].numberOfVotes + numberOfVotes;
-    if (3*voteInfo[vote].numberOfVotes > 2*absMembers) {
-      postNewBlock(
-        vote,
-        _blockHash,
-        _epoch,
-        _drMerkleRoot,
-        _tallyMerkleRoot,
-        _previousVote
-      );
+    if (voteInfo[vote].numberOfVotes == 0) {
+      // Add the vote to candidates
+      candidates.push(vote);
+      // Mapping the vote into its hashes
+      voteInfo[vote].voteHashes.blockHash = _blockHash;
+      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
+      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
+      voteInfo[vote].voteHashes.previousVote = _previousVote;
+      voteInfo[vote].voteHashes.epoch = _epoch;
     }
 
+    return vote;
+  }
+
+  /// @dev Updates the count of votes
+  /// @param _vote vote proposed
+  /// @param _numberOfVotes number of votes recieved in proposingBlock
+  /// @param _absMembers number of members of the ABS
+  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _absMembers)
+    private
+  {
+    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
+    // Add the votes
+    if (3*voteInfo[_vote].numberOfVotes > 2*_absMembers) {
+      postNewBlock(
+        _vote,
+        voteInfo[_vote].voteHashes.blockHash,
+        voteInfo[_vote].voteHashes.epoch,
+        voteInfo[_vote].voteHashes.drMerkleRoot,
+        voteInfo[_vote].voteHashes.tallyMerkleRoot,
+        voteInfo[_vote].voteHashes.previousVote
+      );
+    }
+  }
+
+  /// @dev Signature verification usign BLS
+  /// @param _vote vote signed to be verified
+  /// @param _arsMerkleRoot Merkle root belonging to the ars members
+  /// @param _aggregatedSig Signatures aggregated
+  /// @param _publicKeys Public Keys of the ars members who signed
+  /// @param _merklePath Merkle path of the ars members
+  function blsVerification(
+    uint256 _vote,
+    uint256 _arsMerkleRoot,
+    bytes memory _aggregatedSig,
+    bytes[] memory _publicKeys,
+    uint256[] memory _merklePath
+    )
+    private
+  {
+    // // Aggregate the _publicKeys
+    // uint256 n = _publicKeys.length;
+    // for (uint i = 0; i < n - 1; i++) {
+    //   uint256[4] sum = 
+    //   bn128_add(_publicKeys[i, i+1])
+    //   _publicKeys[i] + _publicKeys[i + 1];
+    // }
   }
 
   /// @dev Post new block into the block relay
