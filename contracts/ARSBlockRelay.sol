@@ -183,6 +183,8 @@ contract ARSBlockRelay is BlockRelayInterface {
 
   }
 
+  
+
   /// @dev Proposes a block into the block relay
   /// @param _blockHash Hash of the block header
   /// @param _epoch Epoch for which the block is proposed
@@ -192,7 +194,13 @@ contract ARSBlockRelay is BlockRelayInterface {
   /// @param _aggregatedSig Signatures aggregated
   /// @param _publicKeys Public Keys of the ars members who signed
   /// @param _merklePath Merkle path of the ars members
-  /// @param _previousVote Hash of block's hashes proposed in a previous epoch
+  /// @param _previousVote Hash of block's hashes proposed in a previous epoch // // Aggregate the _publicKeys
+    // uint256 n = _publicKeys.length;
+    // for (uint i = 0; i < n - 1; i++) {
+    //   uint256[4] sum =
+    //   bn128_add(_publicKeys[i, i+1])
+    //   _publicKeys[i] + _publicKeys[i + 1];
+    // }
   function proposeBlock(
     uint256 _blockHash,
     uint256 _epoch,
@@ -209,6 +217,20 @@ contract ARSBlockRelay is BlockRelayInterface {
     blockDoesNotExist(_blockHash)
     returns(bytes32)
   {
+    // Verify the public keys correpond to members of the ARS
+    for (uint i = 0; i < _publicKeys.length; i++) {
+      bytes memory publickKey = _publicKeys[i];
+      require(
+        verifyArsMembership(
+          _merklePath,
+          _arsMerkleRoot,
+          // the index is the position in publickeys
+          i,
+          publickKey
+      ),
+        "Some of the public keys are not from ARS members");
+    }
+
     // 1. Check if the public keys have already been counted
     // 2. Agreggate the public keys P
     // 3. Calculate H(m) = H(_blockHash)
@@ -230,6 +252,29 @@ contract ARSBlockRelay is BlockRelayInterface {
     updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
 
 
+  }
+
+  /// @dev Verifies if an address is part of the ARS
+  /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..]
+  /// @param _arsMerkleRoot the blockHash
+  /// @param _index the index in the merkle tree of the element to verify
+  /// @param _publickKey the leaf to be verified
+  /// @return true or false depending the validity
+  function verifyArsMembership(
+    uint256[] memory _merklePath,
+    uint256 _arsMerkleRoot,
+    uint256 _index,
+    bytes memory  _publickKey)
+  internal
+  pure
+  returns(bool)
+  {
+    return(verifyPoi(
+      _merklePath,
+      _arsMerkleRoot,
+      _index,
+      uint256(sha256(_publickKey))
+      ));
   }
 
   /// @dev Create vote
