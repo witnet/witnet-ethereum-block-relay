@@ -352,53 +352,36 @@ contract ARSBlockRelay is BlockRelayInterface {
     }
   }
 
-  /// @dev Signature verification usign BLS
-  /// @param _vote vote signed to be verified
-  /// @param _arsMerkleRoot Merkle root belonging to the ars members
-  /// @param _aggregatedSig Signatures aggregated
-  /// @param _publicKeys Public Keys of the ars members who signed
-  /// @param _merklePath Merkle path of the ars members
-  function blsVerification(
-    uint256 _vote,
-    uint256 _arsMerkleRoot,
-    bytes memory _aggregatedSig,
-    bytes[] memory _publicKeys,
-    uint256[] memory _merklePath
+  /// @dev aggregates the public keys to be used in BLs
+  /// @param _publicKeys Public Keys to be aggregated
+  function publickeysAggregation(
+    bytes[] memory _publicKeys
     )
     private
     returns(uint256[4] memory)
   {
-    
-    // Aggregate the _publicKeys
-    // uint256 n = _publicKeys.length;
-    // for (uint i = 0; i < n - 1; i++) {
-    //   uint256[4] memory publicKey1 = [
-    //     uint256(sha256(_publicKeys[i][0])),
-    //     uint256(sha256(_publicKeys[i][1])),
-    //     uint256(sha256(_publicKeys[i][2])),
-    //     uint256(sha256(_publicKeys[i][3]))
-    //     ];
-
-    //   uint256[4] memory publicKey2 = [
-    //     uint256(sha256(_publicKeys[i + 1][0])),
-    //     uint256(sha256(_publicKeys[i + 1][1])),
-    //     uint256(sha256(_publicKeys[i + 1][2])),
-    //     uint256(sha256(_publicKeys[i + 1][3]))
-    //   ];
-
-    //   //uint256[4] aggregatedPubKeys =
-    //   BN256G2.ECTwistAdd(publicKey1, publicKey2);
-    // }
-
-    // bytes[4] storage bytesPubKey1 = _publicKeys[0];
-    // uint256[4] storage pubKey1 = [
-    //   uint256(sha256(bytesPubKey1[0])),
-    //   uint256(sha256(bytesPubKey1[1])),
-    //   uint256(sha256(bytesPubKey1[2])),
-    //   uint256(sha256(bytesPubKey1[3]))];
-
-    // return pubKey1;
-
+    decodePublicKeys(_publicKeys);
+    uint256 n = _publicKeys.length;
+    uint256[4] memory aggregatedPubKey;
+    aggregatedPubKey = [
+      pubKeyCoordinates[_publicKeys[0]].x1,
+      pubKeyCoordinates[_publicKeys[0]].x2,
+      pubKeyCoordinates[_publicKeys[0]].y1,
+      pubKeyCoordinates[_publicKeys[0]].y2
+    ];
+    for (uint i = 1; i < n; i++) {
+      aggregatedPubKey = BN256G2.ECTwistAdd(
+         aggregatedPubKey[0],
+         aggregatedPubKey[1],
+         aggregatedPubKey[2],
+         aggregatedPubKey[3],
+         pubKeyCoordinates[_publicKeys[i]].x1,
+         pubKeyCoordinates[_publicKeys[i]].x2,
+         pubKeyCoordinates[_publicKeys[i]].y1,
+         pubKeyCoordinates[_publicKeys[i]].y2
+      );
+      return aggregatedPubKey;
+    }
   }
 
   /// @dev Decodes a public key and adds the coordinates in G2

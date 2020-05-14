@@ -28,7 +28,8 @@
   ],
   "license": "GPL-3.0",
   "dependencies": {
-    "openzeppelin-solidity": "2.5.0"
+    "openzeppelin-solidity": "2.5.0",
+    "bls-solidity": "git+https://github.com/clbartoli/bls-solidity#wip"
   },
   "devDependencies": {
     "dotenv": "^8.2.0",
