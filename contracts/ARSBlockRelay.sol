@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ActiveBridgeSetInterface.sol";
 import "./BlockRelayInterface.sol";
+import "bls-solidity/contracts/BN256G2.sol";
 
 
 /**
@@ -45,6 +46,14 @@ contract ARSBlockRelay is BlockRelayInterface {
     Hashes voteHashes;
   }
 
+  struct PublicKeyCoordinates {
+    // Coordinates of the public key in G2
+    uint256 x1;
+    uint256 x2;
+    uint256 y1;
+    uint256 y2;
+  }
+
   // Needed for the constructor
   uint256 public witnetGenesis;
   uint256 public epochSeconds;
@@ -69,6 +78,9 @@ contract ARSBlockRelay is BlockRelayInterface {
 
   // Map a vote proposed to the number of votes received and its hashes
   mapping(uint256=> VoteInfo) internal voteInfo;
+
+  // Map a publickKey to its coordinates in G2
+  mapping(bytes=> PublicKeyCoordinates) internal pubKeyCoordinates;
 
   // Ensure block exists
   modifier blockExists(uint256 _id){
@@ -354,14 +366,69 @@ contract ARSBlockRelay is BlockRelayInterface {
     uint256[] memory _merklePath
     )
     private
+    returns(uint256[4] memory)
   {
-    // // Aggregate the _publicKeys
+    
+    // Aggregate the _publicKeys
     // uint256 n = _publicKeys.length;
     // for (uint i = 0; i < n - 1; i++) {
-    //   uint256[4] sum = 
-    //   bn128_add(_publicKeys[i, i+1])
-    //   _publicKeys[i] + _publicKeys[i + 1];
+    //   uint256[4] memory publicKey1 = [
+    //     uint256(sha256(_publicKeys[i][0])),
+    //     uint256(sha256(_publicKeys[i][1])),
+    //     uint256(sha256(_publicKeys[i][2])),
+    //     uint256(sha256(_publicKeys[i][3]))
+    //     ];
+
+    //   uint256[4] memory publicKey2 = [
+    //     uint256(sha256(_publicKeys[i + 1][0])),
+    //     uint256(sha256(_publicKeys[i + 1][1])),
+    //     uint256(sha256(_publicKeys[i + 1][2])),
+    //     uint256(sha256(_publicKeys[i + 1][3]))
+    //   ];
+
+    //   //uint256[4] aggregatedPubKeys =
+    //   BN256G2.ECTwistAdd(publicKey1, publicKey2);
     // }
+
+    // bytes[4] storage bytesPubKey1 = _publicKeys[0];
+    // uint256[4] storage pubKey1 = [
+    //   uint256(sha256(bytesPubKey1[0])),
+    //   uint256(sha256(bytesPubKey1[1])),
+    //   uint256(sha256(bytesPubKey1[2])),
+    //   uint256(sha256(bytesPubKey1[3]))];
+
+    // return pubKey1;
+
+  }
+
+  /// @dev Decodes a public key and adds the coordinates in G2
+  /// @param _publicKeys Public Key of the ars members who signed
+  function decodePublicKeys(
+    bytes[] memory _publicKeys
+    )
+    private
+    returns(uint256[4] memory)
+  {
+    uint256 n = _publicKeys.length;
+
+    for (uint i = 0; i < n; i++) {
+      bytes memory publicKey = _publicKeys[i];
+      bytes32 x1;
+      bytes32 x2;
+      bytes32 y1;
+      bytes32 y2;
+      assembly {
+            x1 := mload(add(publicKey, 0x20))
+            x2 := mload(add(publicKey, 0x40))
+            y1 := mload(add(publicKey, 0x60))
+            y2 := mload(add(publicKey, 0x40))
+      }
+
+      pubKeyCoordinates[publicKey].x1 = uint256(x1);
+      pubKeyCoordinates[publicKey].x2 = uint256(x2);
+      pubKeyCoordinates[publicKey].y1 = uint256(y1);
+      pubKeyCoordinates[publicKey].y2 = uint256(y2);
+    }
   }
 
   /// @dev Post new block into the block relay
