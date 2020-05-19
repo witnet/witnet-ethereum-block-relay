@@ -4,6 +4,7 @@ pragma experimental ABIEncoderV2;
 import "./ActiveBridgeSetInterface.sol";
 import "./BlockRelayInterface.sol";
 import "bls-solidity/contracts/BN256G2.sol";
+import "bls-solidity/contracts/BN256G1.sol";
 
 
 /**
@@ -352,6 +353,52 @@ contract ARSBlockRelay is BlockRelayInterface {
     }
   }
 
+  /// @dev Checks that e(S,G1)=s(H(m), P)
+  /// @param _message the femmasge that has been signed m
+  /// @param _signature the signature aggregated S
+  /// @param _publicKeyAggregated the agregation of the public keys P
+  function blsSignatureVerification(
+    bytes memory _message,
+    bytes memory _signature,
+    uint256[4] memory _publicKeyAggregated)
+    internal
+    returns(bool)
+  {
+    // Get the coordinates of the signature aggreagetd
+    bytes32 s1;
+    bytes32 s2;
+    assembly {
+            s1 := mload(add(_signature, 0x20))
+            s2 := mload(add(_signature, 0x40))
+      }
+    // Coordinates of the generator point of G2
+    uint256 g2xx = uint256(0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED);
+    uint256 g2xy = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
+    uint256 g2yx = uint256(0x12C85EA5DB8C6DEB4AAB71808DCB408FE3D1E7690C43D37B4CE6CC0166FA7DAA);
+    uint256 g2yy = uint256(0x090689D0585FF075EC9E99AD690C3395BC4B313370B38EF355ACDADCD122975B);
+    // Coordinates of the message hash H(m)
+    uint256[2] memory hm;
+    (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
+    // Checks the pairing
+    bool check = BN256G1.bn256CheckPairing([
+      uint256(s1),
+      uint256(s2),
+      g2xx,
+      g2xy,
+      g2yx,
+      g2yy,
+      hm[0],
+      hm[1],
+      _publicKeyAggregated[0],
+      _publicKeyAggregated[1],
+      _publicKeyAggregated[2],
+      _publicKeyAggregated[3]
+    ]);
+
+    require(check, "the BLS signature is not valid");
+    return check;
+  }
+
   /// @dev aggregates the public keys to be used in BLs
   /// @param _publicKeys Public Keys to be aggregated
   function publickeysAggregation(
@@ -370,7 +417,7 @@ contract ARSBlockRelay is BlockRelayInterface {
       pubKeyCoordinates[_publicKeys[0]].y2
     ];
     for (uint i = 1; i < n; i++) {
-      aggregatedPubKey = BN256G2.ECTwistAdd(
+      aggregatedPubKey = BN256G2.ecTwistAdd(
          aggregatedPubKey[0],
          aggregatedPubKey[1],
          aggregatedPubKey[2],
