@@ -9,12 +9,12 @@ import "bls-solidity/contracts/BN256G1.sol";
 
 /**
  * @title Active Bridge Set Block relay contract
- * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality bsaed on the Active Bridge Set (ABS)
+ * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality bsaed on the Active Reputation Set (ARS)
  * @dev More information can be found here https://github.com/witnet/research/blob/master/bridge/docs/BFT_finality.md
  * DISCLAIMER: this is a work in progress, meaning the contract could be voulnerable to attacks
  * @author Witnet Foundation
  */
-contract ARSBlockRelay is BlockRelayInterface {
+contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   struct Beacon {
     // Hash of the last block
@@ -102,9 +102,9 @@ contract ARSBlockRelay is BlockRelayInterface {
     require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
     _;
   }
-  
+
   constructor(
-    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress) public{
+    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wrbAddress) public{
     // Set the first epoch in Witnet plus the epoch duration when deploying the contract
     witnetGenesis = _witnetGenesis;
     epochSeconds = _epochSeconds;
@@ -196,6 +196,36 @@ contract ARSBlockRelay is BlockRelayInterface {
 
   }
 
+  /// @dev Decodes a public key and adds the coordinates in G2
+  /// @param _publicKeys Public Key of the ars members who signed
+  function decodePublicKeys(
+    bytes[] memory _publicKeys
+    )
+    public
+    returns(uint256[4] memory)
+  {
+    uint256 n = _publicKeys.length;
+
+    for (uint i = 0; i < n; i++) {
+      bytes memory publicKey = _publicKeys[i];
+      bytes32 x1;
+      bytes32 x2;
+      bytes32 y1;
+      bytes32 y2;
+      assembly {
+            x1 := mload(add(publicKey, 0x20))
+            x2 := mload(add(publicKey, 0x40))
+            y1 := mload(add(publicKey, 0x60))
+            y2 := mload(add(publicKey, 0x40))
+      }
+
+      pubKeyCoordinates[publicKey].x1 = uint256(x1);
+      pubKeyCoordinates[publicKey].x2 = uint256(x2);
+      pubKeyCoordinates[publicKey].y1 = uint256(y1);
+      pubKeyCoordinates[publicKey].y2 = uint256(y2);
+    }
+  }
+
   /// @dev Verifies if an address is part of the ARS
   /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..]
   /// @param _arsMerkleRoot the blockHash
@@ -219,10 +249,11 @@ contract ARSBlockRelay is BlockRelayInterface {
       ));
   }
 
-    /// @dev Checks that e(S,G1)=s(H(m), P)
-  /// @param _message the femmasge that has been signed m
-  /// @param _signature the signature aggregated S
-  /// @param _publicKeyAggregated the agregation of the public keys P
+  /// @dev Verifies the pairing e(S,G2)= e(H(m), P), where S is the aggreagted signature
+  /// and P is the aggregated public key.
+  /// @param _message the message that has been signed m.
+  /// @param _signature the aggregated signature S.
+  /// @param _publicKeyAggregated the agregated public key P.
   function verifyBlsSignature(
     bytes memory _message,
     bytes memory _signature,
@@ -237,15 +268,18 @@ contract ARSBlockRelay is BlockRelayInterface {
             s1 := mload(add(_signature, 0x20))
             s2 := mload(add(_signature, 0x40))
       }
+
     // Coordinates of the generator point of G2
     uint256 g2xx = uint256(0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED);
     uint256 g2xy = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
     uint256 g2yx = uint256(0x12C85EA5DB8C6DEB4AAB71808DCB408FE3D1E7690C43D37B4CE6CC0166FA7DAA);
     uint256 g2yy = uint256(0x090689D0585FF075EC9E99AD690C3395BC4B313370B38EF355ACDADCD122975B);
+
     // Coordinates of the message hash H(m)
     uint256[2] memory hm;
     (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
-    // Checks the pairing
+
+    // Checks the pairing e(S,G2)= e(H(m), P)
     bool check = BN256G1.bn256CheckPairing([
       uint256(s1),
       uint256(s2),
@@ -261,15 +295,12 @@ contract ARSBlockRelay is BlockRelayInterface {
       _publicKeyAggregated[3]
     ]);
 
-    require(check, "the BLS signature is not valid");
     return check;
   }
 
-  /// @dev aggregates the public keys to be used in BLs
+  /// @dev aggregates the public keys to be used in BLS
   /// @param _publicKeys Public Keys to be aggregated
-  function publickeysAggregation(
-    bytes[] memory _publicKeys
-    )
+  function publickeysAggregation(bytes[] memory _publicKeys)
     private
     returns(uint256[4] memory)
   {
@@ -282,6 +313,7 @@ contract ARSBlockRelay is BlockRelayInterface {
       pubKeyCoordinates[_publicKeys[0]].y1,
       pubKeyCoordinates[_publicKeys[0]].y2
     ];
+
     for (uint i = 1; i < n; i++) {
       aggregatedPubKey = BN256G2.ecTwistAdd(
          aggregatedPubKey[0],
@@ -297,15 +329,16 @@ contract ARSBlockRelay is BlockRelayInterface {
     }
   }
 
-  /// @dev Create vote
-  /// @param _blockHash Hash of the block headerPost
-  /// @param _epoch Witnet epoch to which the block belongs to
-  /// @param _drMerkleRoot Merkle root belonging to the data requests
-  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
-  /// @param _previousVote Hash of block's hashes proposed in the previous epochuint256 _arsMerkleRoot,
-  /// @param _aggregatedSig sdgfgfd
-  /// @param _publicKeys asdgfgfd
-  /// @param _merklePath zfgfdgfdg
+  /// @dev Proposes a block into the block relay.
+  /// @param _blockHash Hash of the block headerPost.
+  /// @param _epoch Witnet epoch to which the block belongs to.
+  /// @param _drMerkleRoot Merkle root belonging to the data requests.
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
+  /// @param _previousVote Hash of block's hashes proposed in the previous epoch.
+  /// @param _arsMerkleRoot Merkle root belonging to the ARS membership.
+  /// @param _merklePath merklePath to verify the membership to the ARS.
+  /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
+  /// @param _publicKeys public keys of the proposers, members of the ARS.
   function proposeBlock(
     uint256 _blockHash,
     uint256 _epoch,
@@ -313,10 +346,10 @@ contract ARSBlockRelay is BlockRelayInterface {
     uint256 _tallyMerkleRoot,
     uint256 _previousVote,
     uint256 _arsMerkleRoot,
+    uint256[] memory _merklePath,
     bytes memory _aggregatedSig,
-    bytes[] memory _publicKeys,
-    uint256[] memory _merklePath)
-    //uint256 _absMembers)
+    bytes[] memory _publicKeys
+    )
     private
     blockDoesNotExist(_blockHash)
     returns(uint256)
@@ -332,7 +365,7 @@ contract ARSBlockRelay is BlockRelayInterface {
           i,
           publickKey
       ),
-        "Some of the public keys are not from ARS members");
+        "Some of the public keys are not ARS members");
     }
 
     // 2. Aggregate the _publicKeys
@@ -378,13 +411,13 @@ contract ARSBlockRelay is BlockRelayInterface {
   /// @dev Updates the count of votes
   /// @param _vote vote proposed
   /// @param _numberOfVotes number of votes recieved in proposingBlock
-  /// @param _absMembers number of members of the ABS
-  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _absMembers)
+  /// @param _arsMembers number of members of the ARS
+  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _arsMembers)
     private
   {
     voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
     // Add the votes
-    if (3*voteInfo[_vote].numberOfVotes > 2*_absMembers) {
+    if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
       postNewBlock(
         _vote,
         voteInfo[_vote].voteHashes.blockHash,
@@ -393,38 +426,6 @@ contract ARSBlockRelay is BlockRelayInterface {
         voteInfo[_vote].voteHashes.tallyMerkleRoot,
         voteInfo[_vote].voteHashes.previousVote
       );
-    }
-  }
-
-
-
-  /// @dev Decodes a public key and adds the coordinates in G2
-  /// @param _publicKeys Public Key of the ars members who signed
-  function decodePublicKeys(
-    bytes[] memory _publicKeys
-    )
-    private
-    returns(uint256[4] memory)
-  {
-    uint256 n = _publicKeys.length;
-
-    for (uint i = 0; i < n; i++) {
-      bytes memory publicKey = _publicKeys[i];
-      bytes32 x1;
-      bytes32 x2;
-      bytes32 y1;
-      bytes32 y2;
-      assembly {
-            x1 := mload(add(publicKey, 0x20))
-            x2 := mload(add(publicKey, 0x40))
-            y1 := mload(add(publicKey, 0x60))
-            y2 := mload(add(publicKey, 0x40))
-      }
-
-      pubKeyCoordinates[publicKey].x1 = uint256(x1);
-      pubKeyCoordinates[publicKey].x2 = uint256(x2);
-      pubKeyCoordinates[publicKey].y1 = uint256(y1);
-      pubKeyCoordinates[publicKey].y2 = uint256(y2);
     }
   }
 
@@ -445,6 +446,11 @@ contract ARSBlockRelay is BlockRelayInterface {
     private
     blockDoesNotExist(_blockHash)
   {
+    uint256 id = _blockHash;
+    lastBlock.blockHash = id;
+    lastBlock.epoch = _epoch;
+    blocks[id].drHashMerkleRoot = _drMerkleRoot;
+    blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
   }
 
   /// @dev Verifies the validity of a PoI
