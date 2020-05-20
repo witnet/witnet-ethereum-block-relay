@@ -102,22 +102,7 @@ contract ARSBlockRelay is BlockRelayInterface {
     require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
     _;
   }
-
-  // Ensure block does not exist
-  modifier blsSigVerification(uint256 _blockHash, bytes memory _aggregatedSig, bytes[] memory _publicKeys){
-    uint256[4] memory pubKeyAgg;
-    pubKeyAgg = publickeysAggregation(_publicKeys);
-    require(
-      blsSignatureVerification(
-        abi.encode(_blockHash),
-        _aggregatedSig,
-        pubKeyAgg
-        ),
-      "not valid BLS signature");
-    //require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
-    _;
-  }
-
+  
   constructor(
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress) public{
     // Set the first epoch in Witnet plus the epoch duration when deploying the contract
@@ -211,80 +196,6 @@ contract ARSBlockRelay is BlockRelayInterface {
 
   }
 
-  // /// @dev Proposes a block into the block relay
-  // /// @param _vote vote that is proposed
-  // /// @param _arsMerkleRoot Merkle root belonging to the ars members
-  // /// @param _aggregatedSig Signatures aggregated
-  // /// @param _publicKeys Public Keys of the ars members who signed
-  // /// @param _merklePath Merkle path of the ars members
-  // function blsVerifications(
-  //   uint256 _vote,
-  //   uint256 _arsMerkleRoot,
-  //   bytes memory _aggregatedSig,
-  //   bytes[] memory _publicKeys,
-  //   uint256[] memory _merklePath
-  //   )
-  //   public
-  //   // epochValid(_epoch)
-  //   //blockDoesNotExist(_blockHash)
-  //   // blsSigVerification(_blockHash, _aggregatedSig, _publicKeys)
-  //   returns(bytes32)
-  // {
-  //   // Verify the public keys correpond to members of the ARS
-  //   // for (uint i = 0; i < _publicKeys.length; i++) {
-  //   //   bytes memory publickKey = _publicKeys[i];
-  //   //   require(
-  //   //     verifyArsMembership(
-  //   //       _merklePath,
-  //   //       _arsMerkleRoot,
-  //   //       // the index is the position in publickeys
-  //   //       i,
-  //   //       publickKey
-  //   //   ),
-  //   //     "Some of the public keys are not from ARS members");
-  //   // }
-
-  //   // 1. Check if the public keys have already been counted
-  //   // 2. Agreggate the public keys P
-  //   // 3. Calculate H(m) = H(_blockHash)
-  //   // 4. Check the paring e(S,G2) = e(H(m), P)
-  //   uint256[4] memory pubKeyAgg;
-  //   pubKeyAgg = publickeysAggregation(_publicKeys);
-  //   require(
-  //     blsSignatureVerification(
-  //       abi.encode(_vote),
-  //       _aggregatedSig,
-  //       pubKeyAgg
-  //       ),
-  //     "not valid BLS signature");
-  //   // 5. Create the vote and its information
-  //   // 6. Update the vote count and post new block if it reaches 2/3 of the ABS
-
-
-  //   // // Define the vote
-  //   // uint256 vote;
-  //   // vote = createVote(
-  //   //   _blockHash,
-  //   //   _epoch,
-  //   //   _drMerkleRoot,
-  //   //   _tallyMerkleRoot,
-  //   //   _previousVote
-  //   //   //2**_merklePath.length
-  //   // );
-  //   // uint256 vote = createVote(
-  //   //   _blockHash,
-  //   //   _epoch,
-  //   //   _drMerkleRoot,
-  //   //   _tallyMerkleRoot,
-  //   //   _previousVote
-  //   //   //2**_merklePath.length
-  //   // );
-
-  //   updateVoteCount(_vote, _publicKeys.length, 2**_merklePath.length);
-
-
-  // }
-
   /// @dev Verifies if an address is part of the ARS
   /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..]
   /// @param _arsMerkleRoot the blockHash
@@ -308,106 +219,11 @@ contract ARSBlockRelay is BlockRelayInterface {
       ));
   }
 
-  /// @dev Create vote
-  /// @param _blockHash Hash of the block headerPost
-  /// @param _epoch Witnet epoch to which the block belongs to
-  /// @param _drMerkleRoot Merkle root belonging to the data requests
-  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
-  /// @param _previousVote Hash of block's hashes proposed in the previous epochuint256 _arsMerkleRoot,
-  /// @param _aggregatedSig sdgfgfd
-  /// @param _publicKeys asdgfgfd
-  /// @param _merklePath zfgfdgfdg
-  function proposeBlock(
-    uint256 _blockHash,
-    uint256 _epoch,
-    uint256 _drMerkleRoot,
-    uint256 _tallyMerkleRoot,
-    uint256 _previousVote,
-    uint256 _arsMerkleRoot,
-    bytes memory _aggregatedSig,
-    bytes[] memory _publicKeys,
-    uint256[] memory _merklePath)
-    //uint256 _absMembers)
-    private
-    blockDoesNotExist(_blockHash)
-    returns(uint256)
-  {
-    for (uint i = 0; i < _publicKeys.length; i++) {
-      bytes memory publickKey = _publicKeys[i];
-      require(
-        verifyArsMembership(
-          _merklePath,
-          _arsMerkleRoot,
-          // the index is the position in publickeys
-          i,
-          publickKey
-      ),
-        "Some of the public keys are not from ARS members");
-    }
-
-    // Define the vote
-    uint256 vote = uint256(
-      sha256(
-        abi.encodePacked(
-      _blockHash,
-      _epoch,
-      _drMerkleRoot,
-      _tallyMerkleRoot,
-      _previousVote)));
-
-    if (voteInfo[vote].numberOfVotes == 0) {
-      // Add the vote to candidates
-      candidates.push(vote);
-      // Mapping the vote into its hashes
-      voteInfo[vote].voteHashes.blockHash = _blockHash;
-      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
-      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
-      voteInfo[vote].voteHashes.previousVote = _previousVote;
-      voteInfo[vote].voteHashes.epoch = _epoch;
-    }
-
-    // blsVerifications(
-    //   vote, _arsMerkleRoot, _aggregatedSig, _publicKeys, _merklePath);
-    uint256[4] memory pubKeyAgg;
-    pubKeyAgg = publickeysAggregation(_publicKeys);
-    require(
-      blsSignatureVerification(
-        abi.encode(vote),
-        _aggregatedSig,
-        pubKeyAgg
-        ),
-      "not valid BLS signature");
-    // 5. Create the vote and its in
-    updateVoteCount( vote, _publicKeys.length, 2**_merklePath.length);
-    //return vote;
-  }
-
-  /// @dev Updates the count of votes
-  /// @param _vote vote proposed
-  /// @param _numberOfVotes number of votes recieved in proposingBlock
-  /// @param _absMembers number of members of the ABS
-  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _absMembers)
-    private
-  {
-    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
-    // Add the votes
-    if (3*voteInfo[_vote].numberOfVotes > 2*_absMembers) {
-      postNewBlock(
-        _vote,
-        voteInfo[_vote].voteHashes.blockHash,
-        voteInfo[_vote].voteHashes.epoch,
-        voteInfo[_vote].voteHashes.drMerkleRoot,
-        voteInfo[_vote].voteHashes.tallyMerkleRoot,
-        voteInfo[_vote].voteHashes.previousVote
-      );
-    }
-  }
-
-  /// @dev Checks that e(S,G1)=s(H(m), P)
+    /// @dev Checks that e(S,G1)=s(H(m), P)
   /// @param _message the femmasge that has been signed m
   /// @param _signature the signature aggregated S
   /// @param _publicKeyAggregated the agregation of the public keys P
-  function blsSignatureVerification(
+  function verifyBlsSignature(
     bytes memory _message,
     bytes memory _signature,
     uint256[4] memory _publicKeyAggregated)
@@ -480,6 +296,107 @@ contract ARSBlockRelay is BlockRelayInterface {
       return aggregatedPubKey;
     }
   }
+
+  /// @dev Create vote
+  /// @param _blockHash Hash of the block headerPost
+  /// @param _epoch Witnet epoch to which the block belongs to
+  /// @param _drMerkleRoot Merkle root belonging to the data requests
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
+  /// @param _previousVote Hash of block's hashes proposed in the previous epochuint256 _arsMerkleRoot,
+  /// @param _aggregatedSig sdgfgfd
+  /// @param _publicKeys asdgfgfd
+  /// @param _merklePath zfgfdgfdg
+  function proposeBlock(
+    uint256 _blockHash,
+    uint256 _epoch,
+    uint256 _drMerkleRoot,
+    uint256 _tallyMerkleRoot,
+    uint256 _previousVote,
+    uint256 _arsMerkleRoot,
+    bytes memory _aggregatedSig,
+    bytes[] memory _publicKeys,
+    uint256[] memory _merklePath)
+    //uint256 _absMembers)
+    private
+    blockDoesNotExist(_blockHash)
+    returns(uint256)
+  {
+    // 1. Check the _publickeys are ARS members
+    for (uint i = 0; i < _publicKeys.length; i++) {
+      bytes memory publickKey = _publicKeys[i];
+      require(
+        verifyArsMembership(
+          _merklePath,
+          _arsMerkleRoot,
+          // the index is the position in publickeys
+          i,
+          publickKey
+      ),
+        "Some of the public keys are not from ARS members");
+    }
+
+    // 2. Aggregate the _publicKeys
+    uint256[4] memory pubKeyAgg;
+    pubKeyAgg = publickeysAggregation(_publicKeys);
+
+    // Define the vote
+    uint256 vote = uint256(
+      sha256(
+        abi.encodePacked(
+      _blockHash,
+      _epoch,
+      _drMerkleRoot,
+      _tallyMerkleRoot,
+      _previousVote)));
+
+    // 3. Verify the BLS signature with signature and public key aggregated
+    require(
+      verifyBlsSignature(
+        abi.encode(vote),
+        _aggregatedSig,
+        pubKeyAgg
+        ),
+      "not valid BLS signature");
+
+    // 4. Add vote information if it's a new vote
+    if (voteInfo[vote].numberOfVotes == 0) {
+      // Add the vote to candidates
+      candidates.push(vote);
+      // Mapping the vote into its hashes
+      voteInfo[vote].voteHashes.blockHash = _blockHash;
+      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
+      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
+      voteInfo[vote].voteHashes.previousVote = _previousVote;
+      voteInfo[vote].voteHashes.epoch = _epoch;
+    }
+
+    // 5. Update the vote count
+    updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
+
+  }
+
+  /// @dev Updates the count of votes
+  /// @param _vote vote proposed
+  /// @param _numberOfVotes number of votes recieved in proposingBlock
+  /// @param _absMembers number of members of the ABS
+  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _absMembers)
+    private
+  {
+    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
+    // Add the votes
+    if (3*voteInfo[_vote].numberOfVotes > 2*_absMembers) {
+      postNewBlock(
+        _vote,
+        voteInfo[_vote].voteHashes.blockHash,
+        voteInfo[_vote].voteHashes.epoch,
+        voteInfo[_vote].voteHashes.drMerkleRoot,
+        voteInfo[_vote].voteHashes.tallyMerkleRoot,
+        voteInfo[_vote].voteHashes.previousVote
+      );
+    }
+  }
+
+
 
   /// @dev Decodes a public key and adds the coordinates in G2
   /// @param _publicKeys Public Key of the ars members who signed
