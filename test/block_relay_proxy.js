@@ -36,6 +36,11 @@ contract("Block relay Interface", accounts => {
       await truffleAssert.reverts(blockRelayProxy.verifyDrPoi([1], 11, 1, 1, 1), "Non-existing block")
     })
 
+    it("should return the first controllerwhen checking for 0", async () => {
+      const controller = await blockRelayProxy.getController(0)
+      assert.equal(controller, blockRelayInstance1.address)    
+    })
+
     it("should return true when block is inserted", async () => {
       await blockRelayInstance1.postNewBlock(11, 1, 1, 1)
       // It should revert because of the blockExists modifer in blockRelayInstance
