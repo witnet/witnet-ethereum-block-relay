@@ -38,7 +38,7 @@ contract("Block relay Interface", accounts => {
 
     it("should return the first controllerwhen checking for 0", async () => {
       const controller = await blockRelayProxy.getController(0)
-      assert.equal(controller, blockRelayInstance1.address)    
+      assert.equal(controller, blockRelayInstance1.address)
     })
 
     it("should return true when block is inserted", async () => {

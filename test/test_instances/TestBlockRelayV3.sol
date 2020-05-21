@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+/* solhint-disable no-unused-vars*/
 
 pragma solidity 0.6.8;
 

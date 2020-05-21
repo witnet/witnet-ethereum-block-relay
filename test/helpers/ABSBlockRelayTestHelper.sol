@@ -17,7 +17,8 @@ contract ABSBlockRelayTestHelper is ActiveBridgeSetBlockRelay {
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wbiAddress)
-  ActiveBridgeSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress) public {}
+  public
+  ActiveBridgeSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock, _wbiAddress)  {}
 
   // Sets the current epoch to be the next
   function nextEpoch() external {

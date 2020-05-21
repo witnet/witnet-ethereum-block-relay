@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+/* solhint-disable max-states-count*/
 
 pragma solidity 0.6.8;
 
@@ -341,7 +342,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
   /// @dev Updates the epoch
   function updateEpoch() public view virtual returns(uint256) {
-    // solium-disable-next-line security/no-block-members
+    // solhint-disable-next-line not-rely-on-time
     return (block.timestamp - witnetGenesis)/epochSeconds;
   }
 
