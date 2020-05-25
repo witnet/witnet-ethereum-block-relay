@@ -103,8 +103,9 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     _;
   }
 
+
   constructor(
-    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock, address _wrbAddress) public{
+    uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock) public{
     // Set the first epoch in Witnet plus the epoch duration when deploying the contract
     witnetGenesis = _witnetGenesis;
     epochSeconds = _epochSeconds;
@@ -197,33 +198,37 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   }
 
   /// @dev Decodes a public key and adds the coordinates in G2
-  /// @param _publicKeys Public Key of the ars members who signed
+  /// @param _publicKey Public Key of the ars members who signed
   function decodePublicKeys(
-    bytes[] memory _publicKeys
+    bytes memory _publicKey, uint256[4] memory _coordinates
     )
     public
     returns(uint256[4] memory)
   {
-    uint256 n = _publicKeys.length;
+    // uint256 n = _publicKeys.length;
 
-    for (uint i = 0; i < n; i++) {
-      bytes memory publicKey = _publicKeys[i];
-      bytes32 x1;
-      bytes32 x2;
-      bytes32 y1;
-      bytes32 y2;
-      assembly {
-            x1 := mload(add(publicKey, 0x20))
-            x2 := mload(add(publicKey, 0x40))
-            y1 := mload(add(publicKey, 0x60))
-            y2 := mload(add(publicKey, 0x40))
-      }
+    // for (uint i = 0; i < n; i++) {
+    //   bytes memory publicKey = _publicKeys[i];
+    //   bytes32 x1;
+    //   bytes32 x2;
+    //   bytes32 y1;
+    //   bytes32 y2;
+    //   assembly {
+    //         x1 := mload(add(publicKey, 0x20))
+    //         x2 := mload(add(publicKey, 0x40))
+    //         y1 := mload(add(publicKey, 0x60))
+    //         y2 := mload(add(publicKey, 0x40))
+    //   }
 
-      pubKeyCoordinates[publicKey].x1 = uint256(x1);
-      pubKeyCoordinates[publicKey].x2 = uint256(x2);
-      pubKeyCoordinates[publicKey].y1 = uint256(y1);
-      pubKeyCoordinates[publicKey].y2 = uint256(y2);
-    }
+      // pubKeyCoordinates[publicKey].x1 = uint256(x1);
+      // pubKeyCoordinates[publicKey].x2 = uint256(x2);
+      // pubKeyCoordinates[publicKey].y1 = uint256(y1);
+      // pubKeyCoordinates[publicKey].y2 = uint256(y2);
+
+    pubKeyCoordinates[_publicKey].x1 = _coordinates[0];
+    pubKeyCoordinates[_publicKey].x2 = _coordinates[1];
+    pubKeyCoordinates[_publicKey].y1 = _coordinates[2];
+    pubKeyCoordinates[_publicKey].y2 = _coordinates[3];
   }
 
   /// @dev Verifies if an address is part of the ARS
@@ -258,7 +263,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     bytes memory _message,
     bytes memory _signature,
     uint256[4] memory _publicKeyAggregated)
-    internal
+    public
     returns(bool)
   {
     // Get the coordinates of the signature aggreagetd
@@ -269,30 +274,53 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
             s2 := mload(add(_signature, 0x40))
       }
 
-    // Coordinates of the generator point of G2
-    uint256 g2xx = uint256(0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED);
-    uint256 g2xy = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
-    uint256 g2yx = uint256(0x12C85EA5DB8C6DEB4AAB71808DCB408FE3D1E7690C43D37B4CE6CC0166FA7DAA);
-    uint256 g2yy = uint256(0x090689D0585FF075EC9E99AD690C3395BC4B313370B38EF355ACDADCD122975B);
+    uint256[2] memory s = BN256G1.fromCompressed(_signature);
 
+    // Coordinates of the generator point of G2
+    uint256 g2xx = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
+    uint256 g2xy = uint256(0x1800DEEF121F1E76426A00665E5C4479674322D4F75EDADD46DEBD5CD992F6ED);
+    uint256 g2yx = uint256(0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec);
+    uint256 g2yy = uint256(0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d);
+
+
+  
     // Coordinates of the message hash H(m)
     uint256[2] memory hm;
     (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
 
     // Checks the pairing e(S,G2)= e(H(m), P)
+    // bool check = BN256G1.bn256CheckPairing([
+    //   //uint256(s1),
+    //   //uint256(s2),
+    //   s[0],
+    //   s[1],
+    //   g2xx,
+    //   g2xy,
+    //   g2yx,
+    //   g2yy,
+    //   hm[0],
+    //   hm[1],
+    //   _publicKeyAggregated[0],
+    //   _publicKeyAggregated[1],
+    //   _publicKeyAggregated[2],
+    //   _publicKeyAggregated[3]
+    // ]);
+
     bool check = BN256G1.bn256CheckPairing([
-      uint256(s1),
-      uint256(s2),
+      //uint256(s1),
+      //uint256(s2),
+      hm[0],
+      hm[1],
+      _publicKeyAggregated[1],
+      _publicKeyAggregated[0],
+      _publicKeyAggregated[3],
+      _publicKeyAggregated[2],
+      s[0],
+      s[1],
       g2xx,
       g2xy,
       g2yx,
-      g2yy,
-      hm[0],
-      hm[1],
-      _publicKeyAggregated[0],
-      _publicKeyAggregated[1],
-      _publicKeyAggregated[2],
-      _publicKeyAggregated[3]
+      g2yy
     ]);
 
     return check;
@@ -301,10 +329,9 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   /// @dev aggregates the public keys to be used in BLS
   /// @param _publicKeys Public Keys to be aggregated
   function publickeysAggregation(bytes[] memory _publicKeys)
-    private
+    public
     returns(uint256[4] memory)
   {
-    decodePublicKeys(_publicKeys);
     uint256 n = _publicKeys.length;
     uint256[4] memory aggregatedPubKey;
     aggregatedPubKey = [
@@ -413,7 +440,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   /// @param _numberOfVotes number of votes recieved in proposingBlock
   /// @param _arsMembers number of members of the ARS
   function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _arsMembers)
-    private
+    public
   {
     voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
     // Add the votes
