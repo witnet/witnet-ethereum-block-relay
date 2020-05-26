@@ -288,24 +288,6 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256[2] memory hm;
     (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
 
-    // Checks the pairing e(S,G2)= e(H(m), P)
-    // bool check = BN256G1.bn256CheckPairing([
-    //   //uint256(s1),
-    //   //uint256(s2),
-    //   s[0],
-    //   s[1],
-    //   g2xx,
-    //   g2xy,
-    //   g2yx,
-    //   g2yy,
-    //   hm[0],
-    //   hm[1],
-    //   _publicKeyAggregated[0],
-    //   _publicKeyAggregated[1],
-    //   _publicKeyAggregated[2],
-    //   _publicKeyAggregated[3]
-    // ]);
-
     bool check = BN256G1.bn256CheckPairing([
       //uint256(s1),
       //uint256(s2),
@@ -377,7 +359,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     bytes memory _aggregatedSig,
     bytes[] memory _publicKeys
     )
-    private
+    public
     blockDoesNotExist(_blockHash)
     returns(uint256)
   {

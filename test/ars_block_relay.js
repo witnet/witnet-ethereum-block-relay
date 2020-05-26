@@ -37,8 +37,15 @@ contract("ARS Block Relay", accounts => {
       // Verify the signature  
       const pair = await blockRelay.verifyBlsSignature.call(message, signature, pub_key)
       assert.equal(pair, true)
+
+      const signature_coordinates = await blockRelay._fromCompressed.call(signature)
+
+      const pair2 = await blockRelay._verifyBlsSignature.call(message, [signature_coordinates[0], signature_coordinates[1]], pub_key)
+      assert.equal(pair2, true)
   
     })
+
+
 
 it("should aggregate public keys", async () => {
    // Decode the public key
@@ -81,50 +88,176 @@ it("should aggregate public keys", async () => {
     "0x2cab5d238910cd06fa3f15d86d2597f9ddae6abc926f60e550be101c6c46f216"]
 
   assert.equal(aggre[0].toString(), web3.utils.toBN(output[0]).toString())
+  assert.equal(aggre[1].toString(), web3.utils.toBN(output[1]).toString())
+  assert.equal(aggre[2].toString(), web3.utils.toBN(output[2]).toString())
+  assert.equal(aggre[3].toString(), web3.utils.toBN(output[3]).toString())
 })
 
 
-  //    it("should propose a Block", async () => {
+it("should propose a block", async () => {
+  // Decode the public key
+  // public ley from secret key 0x2009da7287c158b126123c113d1c85241b6e3294dd75c643588630a8bc0f934c
+  const comp_publickey1 = "0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8"
+  const pub_key_coordinates1 = ["0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8",
+  "0x02ce1c4241143cc61d82589c9439c6dd60f81fa6f029625d58bc0f2e25e4ce89",
+  "0x0ba19ae3b5a298b398b3b9d410c7e48c4c8c63a1d6b95b098289fbe1503d00fb",
+  "0x2ec596e93402de0abc73ce741f37ed4984a0b59c96e20df8c9ea1c4e6ec04556"]
 
-  //     // The blockHash we want to propose
-  //     const blockHash = "0x" + sha.sha256("sample")
-  //     const epoch = 1
-  //     const drMerkleRoot = 1
-  //     const tallyMerkleRoot = 1
-  //     const previousVote = 0
+  // Public key form secret key 0x1ab1126ff2e37c6e6eddea943ccb3a48f83b380b856424ee552e113595525565
+  const comp_publickey2 = "0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78"
+   const pub_key_coordinates2 = ["0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78",
+             "0x2cd080d897822a95a0fb103c54f06e9bf445f82f10fe37efce69ecb59514abc8",
+             "0x237faeb0351a693a45d5d54aa9759f52a71d76edae2132616d6085a9b2228bf9",
+             "0x0f46bd1ef47552c3089604c65a3e7154e3976410be01149b60d5a41a6053e6c2"]
 
-  //     const arsMerkleRoot = 1
-  //     const arsMerklePath = 1
+  // decose broth public keys
+  await blockRelay.decodePublicKeys(comp_publickey1, pub_key_coordinates1)
+  await blockRelay.decodePublicKeys(comp_publickey2, pub_key_coordinates2)
 
-  //     const aggregatedSignatures = "0x020f047a153e94b5f109e4013d1bd078112817cf0d58cdf6ba8891f9849852ba5b"
-      
-  //     const message = "0x73616d706c65"   
-  //     const comp_signature = "0x020f047a153e94b5f109e4013d1bd078112817cf0d58cdf6ba8891f9849852ba5b"             
-  //     //const signature = ["0x0xF047A153E94B5F109E4013D1BD078112817CF0D58CDF6BA8891F9849852BA5B", "0x0xC89855F1BD1C37BB2178B123FF337A0DF9DD1EAFB16A25E81EEEF477528BCDE"]
-      
+  const pubKeys = [comp_publickey1, comp_publickey2]
 
-  //     const publicKey = ["0x198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2", "0x1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed", "0x090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b", "0x12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa"]
+  const aggre = await blockRelay.publickeysAggregation.call([comp_publickey1, comp_publickey2])
+  
 
-  //     const tx1 = await blockRelay._proposeBlock.call(blockHash, epoch, drMerkleRoot, tallyMerkleRoot, previousVote, arsMerkleRoot, arsMerklePath, aggregatedSignatures, publicKey)
+  // The blockHash we want to propose
+  const blockHash = "0x73616d706c65"
+  const epoch = 1
+  const drMerkleRoot = 1
+  const tallyMerkleRoot = 1
+  const previousVote = 0
 
-  //     //const message = "0x73616d706c65"
-  //     // const pair = await blockRelay._verifyBlsSignature(message, comp_signature, publicKey)
+  const arsMerkleRoot = 1
+  const arsMerklePath = 1
 
-  //  //    const pair = await blockRelay._verifyBlsSignature.call([
-  //  //     web3.utils.toBN(test.input.x1_g1),
-  //  //     web3.utils.toBN(test.input.y1_g1),
-  //  //     web3.utils.toBN(test.input.x1_re_g2),
-  //  //     web3.utils.toBN(test.input.x1_im_g2),
-  //  //     web3.utils.toBN(test.input.y1_re_g2),
-  //  //     web3.utils.toBN(test.input.y1_im_g2),
-  //  //     web3.utils.toBN(test.input.x2_g1),
-  //  //     web3.utils.toBN(test.input.y2_g1),
-  //  //     web3.utils.toBN(test.input.x2_re_g2),
-  //  //     web3.utils.toBN(test.input.x2_im_g2),
-  //  //     web3.utils.toBN(test.input.y2_re_g2),
-  //  //     web3.utils.toBN(test.input.y2_im_g2)])
-  //  //   assert.equal(pair, test.output.success)
-  //   })
+
+  // Signature1 of blocHash
+  const signature1 = "0x020f047a153e94b5f109e4013d1bd078112817cf0d58cdf6ba8891f9849852ba5b"
+   // Signature2 of blocHash
+  const signature2 = "0x020a53003163aecfb532a16e701ff5f07c95d61ee2f9dbe209849f993a6d6a9900"
+
+  const coord_sig1 = await blockRelay._fromCompressed.call(signature1)
+  const coord_sig2 = await blockRelay._fromCompressed.call(signature2)
+
+  const aggregated_sig =  await blockRelay._aggregateSignature.call([coord_sig1[0], coord_sig1[1], coord_sig2[0], coord_sig2[1]])
+  console.log(aggregated_sig[0].toString())
+  console.log(aggregated_sig[1].toString())
+  
+  const signatureAgg = ["0x10242B541D26E0EAF9996467281ACB2B0294FD7CFF3631B5FAAEB5AC1D3741F7",
+  "0x22C6857A2F1068862313132914E4CAB33B352B8A79CBD65E71D5FBB5316EFFDC"]
+
+const proposeVote = await blockRelay._proposeBlock.call(blockHash, blockHash, epoch, drMerkleRoot, tallyMerkleRoot, previousVote, arsMerkleRoot, [arsMerklePath], signatureAgg, pubKeys)
+
+})
+
+it("should verify BLS signature aggregated", async () => {
+       // it should verify the BLS signature
+       // message signed
+       const message = "0x73616d706c65"
+
+        // Signature1 of blocHash from secret key 2009da7287c158b126123c113d1c85241b6e3294dd75c643588630a8bc0f934c
+  const signature1 = "0x020f047a153e94b5f109e4013d1bd078112817cf0d58cdf6ba8891f9849852ba5b"
+   // Signature2 of blocHash from secret key 1ab1126ff2e37c6e6eddea943ccb3a48f83b380b856424ee552e113595525565
+  const signature2 = "0x020a53003163aecfb532a16e701ff5f07c95d61ee2f9dbe209849f993a6d6a9900"
+
+  const coord_sig1 = await blockRelay._fromCompressed.call(signature1)
+  const coord_sig2 = await blockRelay._fromCompressed.call(signature2)
+  const agg_sig = await blockRelay._aggregateSignature.call([coord_sig1[0], coord_sig1[1], coord_sig2[0], coord_sig2[1]])
+       // signature of H(message)
+       const signatureAgg_comp = "0x02030644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd3" 
+
+       const signatureAgg = ["0x030644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd3",
+       "0x15ed738c0e0a7c92e7845f96b2ae9c0a68a6a449e3538fc7ff3ebf7a5a18a2c4"]
+       // public key
+
+       const comp_publickey1 = "0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8"
+  const pub_key_coordinates1 = ["0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8",
+  "0x02ce1c4241143cc61d82589c9439c6dd60f81fa6f029625d58bc0f2e25e4ce89",
+  "0x0ba19ae3b5a298b398b3b9d410c7e48c4c8c63a1d6b95b098289fbe1503d00fb",
+  "0x2ec596e93402de0abc73ce741f37ed4984a0b59c96e20df8c9ea1c4e6ec04556"]
+
+        const comp_publickey2 = "0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78"
+       const pub_key_coordinates2 = ["0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78",
+             "0x2cd080d897822a95a0fb103c54f06e9bf445f82f10fe37efce69ecb59514abc8",
+             "0x237faeb0351a693a45d5d54aa9759f52a71d76edae2132616d6085a9b2228bf9",
+             "0x0f46bd1ef47552c3089604c65a3e7154e3976410be01149b60d5a41a6053e6c2"]
+
+  // decose broth public keys
+  await blockRelay.decodePublicKeys(comp_publickey1, pub_key_coordinates1)
+  await blockRelay.decodePublicKeys(comp_publickey2, pub_key_coordinates2)
+
+  const aggregated_pubKey = await blockRelay.publickeysAggregation.call([comp_publickey1, comp_publickey2])
+
+      // Verify the signature  
+       const pair = await blockRelay._verifyBlsSignature.call(message, [agg_sig[0], agg_sig[1]], [aggregated_pubKey[0], aggregated_pubKey[1], aggregated_pubKey[2], aggregated_pubKey[3]])
+       assert.equal(pair, true)
+  
+  
+    })
+
+    it("should verify BLS signature1", async () => {
+       // it should verify the BLS signature
+       // message signed
+       const message = "0x73616d706c65"
+
+        // Signature1 of blocHash
+  const signature1 = "0x020f047a153e94b5f109e4013d1bd078112817cf0d58cdf6ba8891f9849852ba5b"
+   
+  const coord_sig1 = await blockRelay._fromCompressed.call(signature1)
+
+
+  const comp_publickey1 = "0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8"
+  const pub_key_coordinates1 = ["0x1cd5df38ed2f184b9830bfd3c2175d53c1455352307ead8cbd7c6201202f4aa8",
+  "0x02ce1c4241143cc61d82589c9439c6dd60f81fa6f029625d58bc0f2e25e4ce89",
+  "0x0ba19ae3b5a298b398b3b9d410c7e48c4c8c63a1d6b95b098289fbe1503d00fb",
+  "0x2ec596e93402de0abc73ce741f37ed4984a0b59c96e20df8c9ea1c4e6ec04556"]
+
+  // decose broth public keys
+  await blockRelay.decodePublicKeys(comp_publickey1, pub_key_coordinates1)
+
+
+      // Verify the signature  
+      // const pair = await blockRelay._verifyBlsSignature.call(message, [signatureAgg[0], signatureAgg[1]], [output[0], output[1], output[2], output[3]])
+      // assert.equal(pair, true)
+      //const pair = await blockRelay._verifyBlsSignature.call(message, [coord_sig1[0], coord_sig1[1]], [pub_key_coordinates1[0], pub_key_coordinates1[1], pub_key_coordinates1[2], pub_key_coordinates1[3]])
+      //assert.equal(pair, true)
+      const pair = await blockRelay.verifyBlsSignature.call(message, signature1, [pub_key_coordinates1[0], pub_key_coordinates1[1], pub_key_coordinates1[2], pub_key_coordinates1[3]])
+      assert.equal(pair, true)
+      const pair2 = await blockRelay._verifyBlsSignature.call(message, [coord_sig1[0], coord_sig1[1]],  [pub_key_coordinates1[0], pub_key_coordinates1[1], pub_key_coordinates1[2], pub_key_coordinates1[3]])
+      assert.equal(pair2, true)
+  
+  
+    })
+
+    it("should verify BLS signature2", async () => {
+       // it should verify the BLS signature
+       // message signed
+       const message = "0x73616d706c65"
+   // Signature2 of blocHash
+  const signature2 = "0x020a53003163aecfb532a16e701ff5f07c95d61ee2f9dbe209849f993a6d6a9900"
+
+  const coord_sig2 = await blockRelay._fromCompressed.call(signature2)
+
+        const comp_publickey2 = "0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78"
+       const pub_key_coordinates2 = ["0x28fe26becbdc0384aa67bf734d08ec78ecc2330f0aa02ad9da00f56c37907f78",
+             "0x2cd080d897822a95a0fb103c54f06e9bf445f82f10fe37efce69ecb59514abc8",
+             "0x237faeb0351a693a45d5d54aa9759f52a71d76edae2132616d6085a9b2228bf9",
+             "0x0f46bd1ef47552c3089604c65a3e7154e3976410be01149b60d5a41a6053e6c2"]
+await blockRelay.decodePublicKeys(comp_publickey2, pub_key_coordinates2)
+
+      // Verify the signature  
+      // const pair = await blockRelay._verifyBlsSignature.call(message, [signatureAgg[0], signatureAgg[1]], [output[0], output[1], output[2], output[3]])
+      // assert.equal(pair, true)
+      //const pair = await blockRelay._verifyBlsSignature.call(message, [coord_sig1[0], coord_sig1[1]], [pub_key_coordinates1[0], pub_key_coordinates1[1], pub_key_coordinates1[2], pub_key_coordinates1[3]])
+      //assert.equal(pair, true)
+      const pair = await blockRelay.verifyBlsSignature.call(message, signature2, [pub_key_coordinates2[0], pub_key_coordinates2[1], pub_key_coordinates2[2], pub_key_coordinates2[3]])
+      assert.equal(pair, true)
+      const pair2 = await blockRelay._verifyBlsSignature.call(message, [coord_sig2[0], coord_sig2[1]],  [pub_key_coordinates2[0], pub_key_coordinates2[1], pub_key_coordinates2[2], pub_key_coordinates2[3]])
+      assert.equal(pair2, true)
+  
+  
+    })
+
+
 
 })
 })
