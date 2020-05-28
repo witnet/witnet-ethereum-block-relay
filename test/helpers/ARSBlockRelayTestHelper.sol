@@ -1,4 +1,4 @@
-pragma solidity 0.6.4;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "../../contracts/ActiveReputationSetBlockRelay.sol";
@@ -8,7 +8,7 @@ import "bls-solidity/contracts/BN256G1.sol";
 
 
 /**
- * @title Test Helper for the new block Relay contract
+ * @title Test Helper for the new ARS block Relay contract
  * @dev The aim of this contract is to raise the visibility modifier of new block relay contract functions for testing purposes
  * @author Witnet Foundation
  */
@@ -17,29 +17,35 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
   ActiveReputationSetBlockRelay public br;
   uint256 public timestamp;
 
+  event Votation(uint256 _vote);
+
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock)
   ActiveReputationSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock) public {}
-
-  function toBytes(uint256[4] memory _publicKey) public returns(bytes memory) {
-    // for (uint i = 0; i < 3; i++) {
-    //   bytes pubKey;
-
-    bytes memory pubKey = abi.encodePacked(_publicKey[0],_publicKey[1], _publicKey[2], _publicKey[3]);
-    //}
-    return(pubKey);
-  }
-
 
   function _fromCompressed(bytes memory _point) public returns(uint256[2] memory) {
     uint256[2] memory s = BN256G1.fromCompressed(_point);
     return s;
   }
 
-
-  function _aggregateSignature(uint256[4] memory input) public returns (uint256[2] memory) {
+  function _aggregateSignatureCoordinates(uint256[4] memory input) public returns (uint256[2] memory) {
     uint256[2] memory result = BN256G1.add(input);
     return result;
+  }
+
+  function _aggregateSignature(bytes[] memory _signatures) public returns (uint256[2] memory) {
+    uint256[2] memory aggregatedSignature = _fromCompressed(_signatures[0]);
+    for (uint i = 1; i < _signatures.length; i++) {
+      aggregatedSignature = _aggregateSignatureCoordinates(
+        [
+          aggregatedSignature[0],
+          aggregatedSignature[1],
+          _fromCompressed(_signatures[i])[0],
+          _fromCompressed(_signatures[i])[1]
+        ]
+      );
+    }
+    return aggregatedSignature;
   }
 
   function _proposeBlock(
@@ -57,10 +63,10 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     public
     returns(uint256)
   {
-     // 2. Aggregate the _publicKeys
+     // Aggregate the _publicKeys
     uint256[4] memory pubKeyAgg;
     pubKeyAgg = publickeysAggregation(_publicKeys);
-
+    emit Votation(_blockHash);
     // Define the vote
     uint256 vote = uint256(
       sha256(
@@ -71,7 +77,7 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
       _tallyMerkleRoot,
       _previousVote)));
 
-    // 3. Verify the BLS signature with signature and public key aggregated
+    //  Verify the BLS signature with signature and public key aggregated
     require(
       _verifyBlsSignature(
         _message,
@@ -80,7 +86,7 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
         ),
       "not valid BLS signature");
 
-    // 4. Add vote information if it's a new vote
+    // Add vote information if it's a new vote
     if (voteInfo[vote].numberOfVotes == 0) {
       // Add the vote to candidates
       candidates.push(vote);
@@ -92,16 +98,18 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
       voteInfo[vote].voteHashes.epoch = _epoch;
     }
 
-    // 5. Update the vote count
+    // Update the vote count
     updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
+    return(_blockHash);
 
   }
 
-  function _verifyBlsSignature(bytes memory _message,
+  function _verifyBlsSignature(
+    // Very similar to verifyBlsSignature but with the signature uncompressed as input
+    bytes memory _message,
     uint256[2] memory _signature,
-    uint256[4] memory _publicKeyAggregated) public returns(bool) {
- // Get the coordinates of the signature aggreagetd
-  
+    uint256[4] memory _publicKeyAggregated) public returns(bool)
+    {
 
     // Coordinates of the generator point of G2
     uint256 g2xx = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
@@ -109,8 +117,6 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     uint256 g2yx = uint256(0x275dc4a288d1afb3cbb1ac09187524c7db36395df7be3b99e673b13a075a65ec);
     uint256 g2yy = uint256(0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d);
 
-
-  
     // Coordinates of the message hash H(m)
     uint256[2] memory hm;
     (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
@@ -133,7 +139,7 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     ]);
 
     return check;
-    }
+  }
 
 
 }

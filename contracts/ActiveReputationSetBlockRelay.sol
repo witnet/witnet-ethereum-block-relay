@@ -1,4 +1,4 @@
-pragma solidity 0.6.4;
+pragma solidity 0.6.8;
 pragma experimental ABIEncoderV2;
 
 import "./ActiveBridgeSetInterface.sol";
@@ -113,8 +113,8 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     witnet = msg.sender;
   }
 
-  /// @dev Read the beacon of the last block inserted
-  /// @return bytes to be signed by bridge nodes
+  /// @dev Read the beacon of the last block inserted.
+  /// @return bytes to be signed by bridge nodes.
   function getLastBeacon()
     external
     view
@@ -125,13 +125,13 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   }
 
   /// @notice Returns the lastest epoch reported to the block relay.
-  /// @return epoch
+  /// @return epoch.
   function getLastEpoch() external view override returns(uint256) {
     return lastBlock.epoch;
   }
 
-  /// @notice Returns the latest hash reported to the block relay
-  /// @return blockhash
+  /// @notice Returns the latest hash reported to the block relay.
+  /// @return blockhash.
   function getLastHash() external view override returns(uint256) {
     return lastBlock.blockHash;
   }
@@ -145,12 +145,12 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     return false;
   }
 
-  /// @dev Verifies the validity of a PoI against the DR merkle root
-  /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
-  /// @param _blockHash the blockHash
-  /// @param _index the index in the merkle tree of the element to verify
-  /// @param _element the leaf to be verified
-  /// @return true or false depending the validity
+  /// @dev Verifies the validity of a PoI against the DR merkle root.
+  /// @param _poi the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _blockHash the blockHash.
+  /// @param _index the index in the merkle tree of the element to verify.
+  /// @param _element the leaf to be verified.
+  /// @return true or false depending the validity.
   function verifyDrPoi(
     uint256[] calldata _poi,
     uint256 _blockHash,
@@ -171,12 +171,12 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
       _element));
   }
 
-  /// @dev Verifies the validity of a PoI against the tally merkle root
-  /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
-  /// @param _blockHash the blockHash
-  /// @param _index the index in the merkle tree of the element to verify
-  /// @param _element the element
-  /// @return true or false depending the validity
+  /// @dev Verifies the validity of a PoI against the tally merkle root.
+  /// @param _poi the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _blockHash the blockHash.
+  /// @param _index the index in the merkle tree of the element to verify.
+  /// @param _element the element.
+  /// @return true or false depending the validity.
   function verifyTallyPoi(
     uint256[] calldata _poi,
     uint256 _blockHash,
@@ -197,61 +197,18 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   }
 
-  /// @dev Decodes a public key and adds the coordinates in G2
-  /// @param _publicKey Public Key of the ars members who signed
-  function decodePublicKeys(
+  /// @dev Stores a public key coordinates in G2 and assigns them to a reference.
+  /// @param _publicKey Public Key of the ars members who signed.
+  function storeCoordinatesPublicKeys(
     bytes memory _publicKey, uint256[4] memory _coordinates
     )
     public
     returns(uint256[4] memory)
   {
-    // uint256 n = _publicKeys.length;
-
-    // for (uint i = 0; i < n; i++) {
-    //   bytes memory publicKey = _publicKeys[i];
-    //   bytes32 x1;
-    //   bytes32 x2;
-    //   bytes32 y1;
-    //   bytes32 y2;
-    //   assembly {
-    //         x1 := mload(add(publicKey, 0x20))
-    //         x2 := mload(add(publicKey, 0x40))
-    //         y1 := mload(add(publicKey, 0x60))
-    //         y2 := mload(add(publicKey, 0x40))
-    //   }
-
-      // pubKeyCoordinates[publicKey].x1 = uint256(x1);
-      // pubKeyCoordinates[publicKey].x2 = uint256(x2);
-      // pubKeyCoordinates[publicKey].y1 = uint256(y1);
-      // pubKeyCoordinates[publicKey].y2 = uint256(y2);
-
     pubKeyCoordinates[_publicKey].x1 = _coordinates[0];
     pubKeyCoordinates[_publicKey].x2 = _coordinates[1];
     pubKeyCoordinates[_publicKey].y1 = _coordinates[2];
     pubKeyCoordinates[_publicKey].y2 = _coordinates[3];
-  }
-
-  /// @dev Verifies if an address is part of the ARS
-  /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..]
-  /// @param _arsMerkleRoot the blockHash
-  /// @param _index the index in the merkle tree of the element to verify
-  /// @param _publickKey the leaf to be verified
-  /// @return true or false depending the validity
-  function verifyArsMembership(
-    uint256[] memory _merklePath,
-    uint256 _arsMerkleRoot,
-    uint256 _index,
-    bytes memory  _publickKey)
-  internal
-  pure
-  returns(bool)
-  {
-    return(verifyPoi(
-      _merklePath,
-      _arsMerkleRoot,
-      _index,
-      uint256(sha256(_publickKey))
-      ));
   }
 
   /// @dev Verifies the pairing e(S,G2)= e(H(m), P), where S is the aggreagted signature
@@ -266,14 +223,6 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     public
     returns(bool)
   {
-    // Get the coordinates of the signature aggreagetd
-    bytes32 s1;
-    bytes32 s2;
-    assembly {
-            s1 := mload(add(_signature, 0x20))
-            s2 := mload(add(_signature, 0x40))
-      }
-
     uint256[2] memory s = BN256G1.fromCompressed(_signature);
 
     // Coordinates of the generator point of G2
@@ -283,14 +232,11 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256 g2yy = uint256(0x1d9befcd05a5323e6da4d435f3b617cdb3af83285c2df711ef39c01571827f9d);
 
 
-  
     // Coordinates of the message hash H(m)
     uint256[2] memory hm;
     (hm[0], hm[1]) = BN256G1.hashToTryAndIncrement(_message);
 
     bool check = BN256G1.bn256CheckPairing([
-      //uint256(s1),
-      //uint256(s2),
       hm[0],
       hm[1],
       _publicKeyAggregated[1],
@@ -308,8 +254,8 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     return check;
   }
 
-  /// @dev aggregates the public keys to be used in BLS
-  /// @param _publicKeys Public Keys to be aggregated
+  /// @dev aggregates the public keys to be used in BLS.
+  /// @param _publicKeys Public Keys to be aggregated.
   function publickeysAggregation(bytes[] memory _publicKeys)
     public
     returns(uint256[4] memory)
@@ -338,6 +284,48 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     }
   }
 
+  /// @dev Verifies if an address is part of the ARS.
+  /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _arsMerkleRoot the blockHash.
+  /// @param _index the index in the merkle tree of the element to verify.
+  /// @param _publickKey the leaf to be verified.
+  /// @return true or false depending the validity.
+  function verifyArsMembership(
+    uint256[] memory _merklePath,
+    uint256 _arsMerkleRoot,
+    uint256 _index,
+    bytes memory  _publickKey)
+  internal
+  pure
+  returns(bool)
+  {
+    return(verifyPoi(
+      _merklePath,
+      _arsMerkleRoot,
+      _index,
+      uint256(sha256(_publickKey))
+      ));
+  }
+
+  /// @dev Updates the count of votes.
+  /// @param _vote vote proposed.
+  /// @param _numberOfVotes number of votes recieved in proposeBlock.
+  /// @param _arsMembers number of members of the ARS.
+  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _arsMembers)
+    internal
+  {
+    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
+
+    if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
+      postNewBlock(
+        voteInfo[_vote].voteHashes.blockHash,
+        voteInfo[_vote].voteHashes.epoch,
+        voteInfo[_vote].voteHashes.drMerkleRoot,
+        voteInfo[_vote].voteHashes.tallyMerkleRoot
+      );
+    }
+  }
+
   /// @dev Proposes a block into the block relay.
   /// @param _blockHash Hash of the block headerPost.
   /// @param _epoch Witnet epoch to which the block belongs to.
@@ -359,11 +347,11 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     bytes memory _aggregatedSig,
     bytes[] memory _publicKeys
     )
-    public
+    private
     blockDoesNotExist(_blockHash)
     returns(uint256)
   {
-    // 1. Check the _publickeys are ARS members
+    // 1. Check if the _publickeys are ARS members
     for (uint i = 0; i < _publicKeys.length; i++) {
       bytes memory publickKey = _publicKeys[i];
       require(
@@ -391,10 +379,10 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
       _tallyMerkleRoot,
       _previousVote)));
 
-    // 3. Verify the BLS signature with signature and public key aggregated
+    // 3. Verify the BLS signature with signatures and public keys aggregated
     require(
       verifyBlsSignature(
-        abi.encode(vote),
+        abi.encode(_blockHash),
         _aggregatedSig,
         pubKeyAgg
         ),
@@ -417,41 +405,18 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   }
 
-  /// @dev Updates the count of votes
-  /// @param _vote vote proposed
-  /// @param _numberOfVotes number of votes recieved in proposingBlock
-  /// @param _arsMembers number of members of the ARS
-  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _arsMembers)
-    public
-  {
-    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
-    // Add the votes
-    if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
-      postNewBlock(
-        _vote,
-        voteInfo[_vote].voteHashes.blockHash,
-        voteInfo[_vote].voteHashes.epoch,
-        voteInfo[_vote].voteHashes.drMerkleRoot,
-        voteInfo[_vote].voteHashes.tallyMerkleRoot,
-        voteInfo[_vote].voteHashes.previousVote
-      );
-    }
-  }
-
-  /// @dev Post new block into the block relay
-  /// @param _vote Vote created when the block was proposed
-  /// @param _blockHash Hash of the block headerPost
-  /// @param _epoch Witnet epoch to which the block belongs to
-  /// @param _drMerkleRoot Merkle root belonging to the data requests
-  /// @param _tallyMerkleRoot Merkle root belonging to the tallies
-  /// @param _previousVote Hash of block's hashes proposed in the previous epoch
+  /// @dev Post new block into the block relay.
+  /// @param _blockHash Hash of the block headerPost.
+  /// @param _epoch Witnet epoch to which the block belongs to.
+  /// @param _drMerkleRoot Merkle root belonging to the data requests.
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
   function postNewBlock(
-    uint256 _vote,
+    //uint256 _vote,
     uint256 _blockHash,
     uint256 _epoch,
     uint256 _drMerkleRoot,
-    uint256 _tallyMerkleRoot,
-    uint256 _previousVote)
+    uint256 _tallyMerkleRoot)
+    //uint256 _previousVote)
     private
     blockDoesNotExist(_blockHash)
   {
@@ -462,12 +427,12 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
   }
 
-  /// @dev Verifies the validity of a PoI
-  /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
-  /// @param _root the merkle root
-  /// @param _index the index in the merkle tree of the element to verify
-  /// @param _element the leaf to be verified
-  /// @return true or false depending the validity
+  /// @dev Verifies the validity of a PoI.
+  /// @param _poi the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _root the merkle root.
+  /// @param _index the index in the merkle tree of the element to verify.
+  /// @param _element the leaf to be verified.
+  /// @return true or false depending the validity.
   function verifyPoi(
     uint256[] memory _poi,
     uint256 _root,
