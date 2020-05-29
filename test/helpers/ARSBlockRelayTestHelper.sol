@@ -24,12 +24,14 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
   ActiveReputationSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock) public {}
 
   function _fromCompressed(bytes memory _point) public returns(uint256[2] memory) {
-    uint256[2] memory s = BN256G1.fromCompressed(_point);
+    uint256[2] memory s;
+    (s[0], s[1]) = BN256G1.fromCompressed(_point);
     return s;
   }
 
   function _aggregateSignatureCoordinates(uint256[4] memory input) public returns (uint256[2] memory) {
-    uint256[2] memory result = BN256G1.add(input);
+    uint256[2] memory result;
+    (result[0], result[1]) = BN256G1.add(input);
     return result;
   }
 

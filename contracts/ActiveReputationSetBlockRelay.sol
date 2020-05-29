@@ -223,7 +223,8 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     public
     returns(bool)
   {
-    uint256[2] memory s = BN256G1.fromCompressed(_signature);
+    uint256[2] memory s;
+    (s[0], s[1]) = BN256G1.fromCompressed(_signature);
 
     // Coordinates of the generator point of G2
     uint256 g2xx = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
@@ -270,7 +271,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     ];
 
     for (uint i = 1; i < n; i++) {
-      aggregatedPubKey = BN256G2.ecTwistAdd(
+      (aggregatedPubKey[0], aggregatedPubKey[1], aggregatedPubKey[2], aggregatedPubKey[3]) = BN256G2.ecTwistAdd(
          aggregatedPubKey[0],
          aggregatedPubKey[1],
          aggregatedPubKey[2],
