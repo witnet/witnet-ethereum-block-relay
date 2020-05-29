@@ -15,6 +15,7 @@ contract("ABS Block Relay", accounts => {
         from: accounts[0],
       })
     })
+
     it("should propose and post a new block", async () => {
       // The blockHash we want to propose
       const blockHash = "0x" + sha.sha256("the vote to propose")
