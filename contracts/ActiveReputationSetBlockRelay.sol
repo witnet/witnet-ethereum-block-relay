@@ -35,9 +35,11 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   // Struct with the hashes of a votation
   struct Hashes {
     uint256 blockHash;
+    uint32 blockIndex;
     uint256 drMerkleRoot;
     uint256 tallyMerkleRoot;
     uint256 previousVote;
+    uint32 lastBlockIndex;
     uint256 epoch;
   }
 
@@ -287,14 +289,12 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   /// @dev Verifies if an address is part of the ARS.
   /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..].
-  /// @param _arsLength number of members of the ARS. 
   /// @param _arsMerkleRoot the blockHash.
   /// @param _index the index in the merkle tree of the element to verify.
   /// @param _publickKey the leaf to be verified.
   /// @return true or false depending the validity.
   function verifyArsMembership(
     uint256[] memory _merklePath,
-    uint256 _arsLength,
     uint256 _arsMerkleRoot,
     uint256 _index,
     bytes memory  _publickKey)
@@ -330,14 +330,14 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   }
 
   /// @dev Proposes a block into the block relay.
-  /// @param _blockHash Hash of the block headerPost.
+  /// @param _blockHash blockHash of the block proposed.
   /// @param _epoch Witnet epoch to which the block belongs to.
   /// @param _drMerkleRoot Merkle root belonging to the data requests.
   /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
   /// @param _previousVote Hash of block's hashes proposed in the previous epoch.
   /// @param _arsLength Number of members of the ARS.
   /// @param _arsMerkleRoot Merkle root belonging to the ARS membership.
-  /// @param _merklePath merklePath to verify the membership to the ARS.
+  /// @param _arsMerklePath merklePath to verify the membership to the ARS.
   /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
   /// @param _publicKeys public keys of the proposers, members of the ARS.
   function proposeBlock(
@@ -346,9 +346,9 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot,
     uint256 _previousVote,
-    uint256 _arsLength,
+    uint64 _arsLength,
     uint256 _arsMerkleRoot,
-    uint256[] memory _merklePath,
+    uint256[] memory _arsMerklePath,
     bytes memory _aggregatedSig,
     bytes[] memory _publicKeys
     )
@@ -361,7 +361,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
       bytes memory publickKey = _publicKeys[i];
       require(
         verifyArsMembership(
-          _merklePath,
+          _arsMerklePath,
           _arsMerkleRoot,
           // the index is the position in publickeys
           i,
@@ -406,10 +406,94 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     }
 
     // 5. Update the vote count
-    updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
+    updateVoteCount(vote, _publicKeys.length, _arsLength);
 
   }
 
+  /// @dev Proposes a block into the block relay.
+  /// @param _blockIndex Index of the block proposed.
+  /// @param _epoch Witnet epoch to which the block belongs to.
+  /// @param _drMerkleRoot Merkle root belonging to the data requests.
+  /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
+  /// @param _lastBlockIndex Index of the previous block from the one that is being proposed.
+  /// @param _previousLastBlockIntex Index of the previous block from the one that is being proposed.
+  /// @param _arsLength Number of members of the ARS.
+  /// @param _arsMerkleRoot Merkle root belonging to the ARS membership.
+  /// @param _arsMerklePath merklePath to verify the membership to the ARS.
+  /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
+  /// @param _publicKeys public keys of the proposers, members of the ARS.
+  function proposeBlock2(
+    uint32 _blockIndex,
+    uint256 _epoch,
+    uint256 _drMerkleRoot,
+    uint256 _tallyMerkleRoot,
+    uint32 _lastBlockIndex,
+    uint32 _previousLastBlockIntex,
+    uint64 _arsLength,
+    uint256 _arsMerkleRoot,
+    uint256[] memory _arsMerklePath,
+    bytes memory _aggregatedSig,
+    bytes[] memory _publicKeys
+    )
+    private
+    blockDoesNotExist(_blockIndex)
+    returns(uint256)
+  {
+    // 1. Check if the _publickeys are ARS members
+    for (uint i = 0; i < _publicKeys.length; i++) {
+      bytes memory publickKey = _publicKeys[i];
+      require(
+        verifyArsMembership(
+          _arsMerklePath,
+          _arsMerkleRoot,
+          // the index is the position in publickeys
+          i,
+          publickKey
+      ),
+        "Some of the public keys are not ARS members");
+    }
+
+    // 2. Aggregate the _publicKeys
+    uint256[4] memory pubKeyAgg;
+    pubKeyAgg = publickeysAggregation(_publicKeys);
+
+    // Define the vote
+    uint256 vote = uint256(
+      sha256(
+        abi.encodePacked(
+      _arsLength,
+      _arsMerkleRoot,
+      _drMerkleRoot,
+      _blockIndex,
+      _lastBlockIndex,
+      _previousLastBlockIntex,
+      _tallyMerkleRoot)));
+
+    // 3. Verify the BLS signature with signatures and public keys aggregated
+    require(
+      verifyBlsSignature(
+        abi.encode(vote),
+        _aggregatedSig,
+        pubKeyAgg
+        ),
+      "not valid BLS signature");
+
+    // 4. Add vote information if it's a new vote
+    if (voteInfo[vote].numberOfVotes == 0) {
+      // Add the vote to candidates
+      candidates.push(vote);
+      // Mapping the vote into its hashes
+      voteInfo[vote].voteHashes.blockIndex = _blockIndex;
+      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
+      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
+      voteInfo[vote].voteHashes.lastBlockIndex = _lastBlockIndex;
+      voteInfo[vote].voteHashes.epoch = _epoch;
+    }
+
+    // 5. Update the vote count
+    updateVoteCount(vote, _publicKeys.length, _arsLength);
+
+  }
   /// @dev Post new block into the block relay.
   /// @param _blockHash Hash of the block headerPost.
   /// @param _epoch Witnet epoch to which the block belongs to.
@@ -421,7 +505,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256 _epoch,
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot)
-    //uint256 _previousVote)
+    //uint256 _lastBlockIndex)
     private
     blockDoesNotExist(_blockHash)
   {
