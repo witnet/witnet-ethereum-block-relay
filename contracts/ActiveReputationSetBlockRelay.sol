@@ -287,12 +287,14 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   /// @dev Verifies if an address is part of the ARS.
   /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _arsLength number of members of the ARS. 
   /// @param _arsMerkleRoot the blockHash.
   /// @param _index the index in the merkle tree of the element to verify.
   /// @param _publickKey the leaf to be verified.
   /// @return true or false depending the validity.
   function verifyArsMembership(
     uint256[] memory _merklePath,
+    uint256 _arsLength,
     uint256 _arsMerkleRoot,
     uint256 _index,
     bytes memory  _publickKey)
@@ -333,6 +335,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   /// @param _drMerkleRoot Merkle root belonging to the data requests.
   /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
   /// @param _previousVote Hash of block's hashes proposed in the previous epoch.
+  /// @param _arsLength Number of members of the ARS.
   /// @param _arsMerkleRoot Merkle root belonging to the ARS membership.
   /// @param _merklePath merklePath to verify the membership to the ARS.
   /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
@@ -343,6 +346,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot,
     uint256 _previousVote,
+    uint256 _arsLength,
     uint256 _arsMerkleRoot,
     uint256[] memory _merklePath,
     bytes memory _aggregatedSig,
