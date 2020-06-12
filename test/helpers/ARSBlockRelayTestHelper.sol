@@ -18,6 +18,7 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
   uint256 public timestamp;
 
   event Votation(uint256 _vote);
+  event AbiHash(bytes _hash);
 
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock)
@@ -143,5 +144,68 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     return check;
   }
 
+function _calculateSuperblock(
+  uint64 _arsLength,
+  uint256 _arsMerkleRoot,
+  uint256 _drMerkleRoot,
+  uint32 _blockIndex,
+  uint256 _lastBlockHash,
+  uint256 _previousLastBlockHash,
+  uint256 _tallyMerkleRoot
+) public returns(uint256) {
+  bytes memory abihash = abi.encodePacked(
+      _arsLength,
+      _arsMerkleRoot,
+      _drMerkleRoot,
+      _blockIndex,
+      _lastBlockHash,
+      _previousLastBlockHash,
+      _tallyMerkleRoot);
+
+  emit AbiHash(abihash);
+  uint256 superblock = uint256(
+       sha256(
+        abi.encodePacked(
+      _arsLength,
+      _arsMerkleRoot,
+      _drMerkleRoot,
+      _blockIndex,
+      _lastBlockHash,
+      _previousLastBlockHash,
+      _tallyMerkleRoot)));
+
+  return superblock;
+}
+
+/// @dev Verifies if an address is part of the ARS.
+  /// @param _merklePath the proof of inclusion as [sibling1, sibling2,..].
+  /// @param _arsMerkleRoot the blockHash.
+  /// @param _index the index in the merkle tree of the element to verify.
+  /// @param _publicKey the leaf to be verified.
+  /// @return true or false depending the validity.
+  function verifyArsMembership(
+    uint256[] memory _merklePath,
+    uint256 _arsMerkleRoot,
+    uint256 _index,
+    bytes memory  _publicKey)
+  internal
+  override
+  returns(bool)
+  {
+    return true;
+  }
+
+function calculateSuperblock(
+ uint64 _arsLength,
+  uint256 _arsMerkleRoot,
+  uint256 _drMerkleRoot,
+  uint32 _blockIndex,
+  uint256 _lastBlockHash,
+  uint256 _previousLastBlockHash,
+  uint256 _tallyMerkleRoot
+) internal override returns(uint256) {
+  uint256 superBlock = 126862285106277;
+  return superBlock;
+}
 
 }
