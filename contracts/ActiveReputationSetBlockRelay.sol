@@ -15,7 +15,7 @@ import "bls-solidity/contracts/BN256G1.sol";
  * @author Witnet Foundation
  */
 contract ActiveReputationSetBlockRelay is BlockRelayInterface {
-  event Message(string _message);
+
 
   struct Beacon {
     // Hash of the last block
@@ -257,7 +257,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   {
     uint256[2] memory s;
     (s[0], s[1]) = BN256G1.fromCompressed(_signature);
-    emit Message("hola");
+
 
     // Coordinates of the generator point of G2
     uint256 g2xx = uint256(0x198E9393920D483A7260BFB731FB5D25F1AA493335A9E71297E485B7AEF312C2);
@@ -300,7 +300,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     internal
     returns(bool)
   {
-    uint256 message = calculateSuperblock(
+    bytes memory messageBytes = calculateSuperblock(
       uint64(_blockHashes[0]),
        _blockHashes[1],
         _blockHashes[2],
@@ -309,12 +309,25 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
         _blockHashes[5],
         _blockHashes[6]
     );
+
+    uint256 message = uint256(
+       sha256(
+        abi.encodePacked(
+     uint64(_blockHashes[0]),
+       _blockHashes[1],
+        _blockHashes[2],
+        uint32(_blockHashes[3]),
+       _blockHashes[4],
+        _blockHashes[5],
+        _blockHashes[6])));
+    
     uint256[4] memory pubKeyAgg;
     pubKeyAgg = publickeysAggregation(_publicKeys);
 
+
     require(
       verifyBlsSignature(
-        abi.encode(message),
+        messageBytes,
         _signature,
         pubKeyAgg
         ),
@@ -451,7 +464,7 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
     if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
       postNewBlock(
-        voteInfo[_vote].voteHashes.blockHash,
+        voteInf[_vote].voteHashes.lastBlockHash,
         voteInfo[_vote].voteHashes.epoch,
         voteInfo[_vote].voteHashes.drMerkleRoot,
         voteInfo[_vote].voteHashes.tallyMerkleRoot
@@ -629,7 +642,7 @@ function calculateSuperblock(
   uint256 _lastBlockHash,
   uint256 _previousLastBlockHash,
   uint256 _tallyMerkleRoot
-) internal virtual returns(uint256) {
+) internal virtual returns(bytes memory) {
   uint256 superblock = uint256(
        sha256(
         abi.encodePacked(
@@ -641,7 +654,7 @@ function calculateSuperblock(
       _previousLastBlockHash,
       _tallyMerkleRoot)));
 
-  return superblock;
+  return abi.encode(superblock);
 }
 
   /// @dev Post new block into the block relay.

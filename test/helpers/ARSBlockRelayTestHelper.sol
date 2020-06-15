@@ -17,9 +17,6 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
   ActiveReputationSetBlockRelay public br;
   uint256 public timestamp;
 
-  event Votation(uint256 _vote);
-  event AbiHash(bytes _hash);
-
   constructor (
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock)
   ActiveReputationSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock) public {}
@@ -69,7 +66,6 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
      // Aggregate the _publicKeys
     uint256[4] memory pubKeyAgg;
     pubKeyAgg = publickeysAggregation(_publicKeys);
-    emit Votation(_blockHash);
     // Define the vote
     uint256 vote = uint256(
       sha256(
@@ -162,7 +158,6 @@ function _calculateSuperblock(
       _previousLastBlockHash,
       _tallyMerkleRoot);
 
-  emit AbiHash(abihash);
   uint256 superblock = uint256(
        sha256(
         abi.encodePacked(
@@ -203,9 +198,9 @@ function calculateSuperblock(
   uint256 _lastBlockHash,
   uint256 _previousLastBlockHash,
   uint256 _tallyMerkleRoot
-) internal override returns(uint256) {
-  uint256 superBlock = 126862285106277;
-  return superBlock;
+) internal override returns(bytes memory ) {
+  bytes memory superblock = hex"73616d706c65";
+  return superblock;
 }
 
 }
