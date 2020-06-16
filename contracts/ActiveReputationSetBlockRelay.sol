@@ -7,6 +7,7 @@ import "bls-solidity/contracts/BN256G2.sol";
 import "bls-solidity/contracts/BN256G1.sol";
 
 
+
 /**
  * @title Active Bridge Set Block relay contract
  * @notice Contract to store/read block headers from the Witnet network, implements BFT Finality bsaed on the Active Reputation Set (ARS)
@@ -15,7 +16,6 @@ import "bls-solidity/contracts/BN256G1.sol";
  * @author Witnet Foundation
  */
 contract ActiveReputationSetBlockRelay is BlockRelayInterface {
-
 
   struct Beacon {
     // Hash of the last block
@@ -33,23 +33,12 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     uint256 previousVote;
   }
 
-  // Struct with the hashes of a votation
+  // Struct with the hashes of the superBlock
   struct Hashes {
-    uint256 blockHash;
-    uint32 blockIndex;
-    uint256 drMerkleRoot;
-    uint256 tallyMerkleRoot;
-    uint256 previousVote;
-    uint32 lastBlockIndex;
-    uint256 epoch;
-  }
-
-  // Struct with the hashes of a votation
-  struct Hashes2 {
     uint64 arsLength;
     uint256 arsMerkleRoot;
-    uint256 drMerkleRoot;
     uint32 blockIndex;
+    uint256 drMerkleRoot;
     uint256 lastBlockHash;
     uint256 previousLastBlockHash;
     uint256 tallyMerkleRoot;
@@ -59,13 +48,6 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     // Information of a Block Candidate
     uint256 numberOfVotes;
     Hashes voteHashes;
-  }
-
-
-  struct VoteInf {
-    // Information of a Block Candidate
-    uint256 numberOfVotes;
-    Hashes2 voteHashes;
   }
 
   struct PublicKeyCoordinates {
@@ -89,6 +71,8 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   // Array with the votes for the proposed blocks
   uint256[] public candidates;
 
+  ActiveBridgeSetInterface internal wbi;
+
     // Last block reported
   Beacon public lastBlock;
 
@@ -101,8 +85,6 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   // Map a vote proposed to the number of votes received and its hashes
   mapping(uint256=> VoteInfo) internal voteInfo;
 
-// Map a vote proposed to the number of votes received and its hashes
-  mapping(uint256=> VoteInf) internal voteInf;
 
   // Map a publicKey to its coordinates in G2
   mapping(bytes=> PublicKeyCoordinates) internal pubKeyCoordinates;
@@ -129,9 +111,10 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
     _;
   }
 
-  // Ensure block does not exist
-  modifier onlyOwner(){
-    require(msg.sender == witnet, "not allowed to call this function");
+  // Ensure that the msg.sender is in the abs
+  modifier isAbsMember() virtual{
+
+    require(wbi.absIsMember(msg.sender) == true, "Not a member of the abs");
     _;
   }
 
@@ -290,36 +273,36 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
 
   /// @dev Verifies the pairing e(S,G2)= e(H(m), P), where S is the aggreagted signature
   /// and P is the aggregated public key.
-  /// @param _blockHashes the message that has been signed m.
+  /// @param _blockArguments the message that has been signed m.
   /// @param _signature the aggregated signature S.
   /// @param _publicKeys the agregated public key P.
   function checkBlsSignature(
-    uint256[7] memory _blockHashes,
+    uint256[7] memory _blockArguments,
     bytes memory _signature,
     bytes[] memory _publicKeys)
     internal
     returns(bool)
   {
     bytes memory messageBytes = calculateSuperblock(
-      uint64(_blockHashes[0]),
-       _blockHashes[1],
-        _blockHashes[2],
-        uint32(_blockHashes[3]),
-       _blockHashes[4],
-        _blockHashes[5],
-        _blockHashes[6]
+      uint64(_blockArguments[0]),
+       _blockArguments[1],
+        _blockArguments[2],
+        uint32(_blockArguments[3]),
+       _blockArguments[4],
+        _blockArguments[5],
+        _blockArguments[6]
     );
 
     uint256 message = uint256(
        sha256(
         abi.encodePacked(
-     uint64(_blockHashes[0]),
-       _blockHashes[1],
-        _blockHashes[2],
-        uint32(_blockHashes[3]),
-       _blockHashes[4],
-        _blockHashes[5],
-        _blockHashes[6])));
+        uint64(_blockArguments[0]),
+        _blockArguments[1],
+        _blockArguments[2],
+        uint32(_blockArguments[3]),
+        _blockArguments[4],
+        _blockArguments[5],
+        _blockArguments[6])));
     
     uint256[4] memory pubKeyAgg;
     pubKeyAgg = publickeysAggregation(_publicKeys);
@@ -333,30 +316,30 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
         ),
       "not valid BLS signature");
 
+    
+
     if (voteInfo[message].numberOfVotes == 0) {
       // Add the vote to candidates
       candidates.push(message);
       // Mapping the vote into its hashes
-      voteInf[message].voteHashes.arsLength = uint64(_blockHashes[0]);
-      voteInf[message].voteHashes.arsMerkleRoot = _blockHashes[1];
-      voteInf[message].voteHashes.drMerkleRoot = _blockHashes[2];
-      voteInf[message].voteHashes.blockIndex = uint32(_blockHashes[3]);
-      voteInf[message].voteHashes.lastBlockHash = _blockHashes[4];
-      voteInf[message].voteHashes.previousLastBlockHash = _blockHashes[5];
-      voteInf[message].voteHashes.tallyMerkleRoot = _blockHashes[6];
+      voteInfo[message].voteHashes.arsLength = uint64(_blockArguments[0]);
+      voteInfo[message].voteHashes.arsMerkleRoot = _blockArguments[1];
+      voteInfo[message].voteHashes.drMerkleRoot = _blockArguments[2];
+      voteInfo[message].voteHashes.blockIndex = uint32(_blockArguments[3]);
+      voteInfo[message].voteHashes.lastBlockHash = _blockArguments[4];
+      voteInfo[message].voteHashes.previousLastBlockHash = _blockArguments[5];
+      voteInfo[message].voteHashes.tallyMerkleRoot = _blockArguments[6];
 
     }
 
-    for (uint i = 0; i < _publicKeys.length; i++) {
-      uint64 numberOfNewVotes;
-      if(lastBlockProposed[_publicKeys[i]] < uint32(_blockHashes[3])) {
+    uint64 numberOfNewVotes;
+    for (uint i = 0; i < _publicKeys.length; i++) { 
+      if(lastBlockProposed[_publicKeys[i]] < uint32(_blockArguments[3])) {
         numberOfNewVotes++;
       }
-
-    updateVoteCount2(message, numberOfNewVotes, uint64(_blockHashes[0]));
-
     }
 
+    updateVoteCount(message, numberOfNewVotes, uint64(_blockArguments[0]));
   }
 
   /// @dev aggregates the public keys to be used in BLS.
@@ -438,150 +421,42 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
   /// @param _vote vote proposed.
   /// @param _numberOfVotes number of votes recieved in proposeBlock.
   /// @param _arsMembers number of members of the ARS.
-  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint256 _arsMembers)
+  function updateVoteCount(uint256 _vote, uint256 _numberOfVotes, uint64 _arsMembers)
     internal
   {
     voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
-
     if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
       postNewBlock(
-        voteInfo[_vote].voteHashes.blockHash,
-        voteInfo[_vote].voteHashes.epoch,
+        voteInfo[_vote].voteHashes.lastBlockHash,
+        voteInfo[_vote].voteHashes.blockIndex,
         voteInfo[_vote].voteHashes.drMerkleRoot,
         voteInfo[_vote].voteHashes.tallyMerkleRoot
       );
     }
   }
-
-  /// @dev Updates the count of votes.
-  /// @param _vote vote proposed.
-  /// @param _numberOfVotes number of votes recieved in proposeBlock.
-  /// @param _arsMembers number of members of the ARS.
-  function updateVoteCount2(uint256 _vote, uint256 _numberOfVotes, uint64 _arsMembers)
-    internal
-  {
-    voteInfo[_vote].numberOfVotes = voteInfo[_vote].numberOfVotes + _numberOfVotes;
-
-    if (3*voteInfo[_vote].numberOfVotes > 2*_arsMembers) {
-      postNewBlock(
-        voteInf[_vote].voteHashes.lastBlockHash,
-        voteInfo[_vote].voteHashes.epoch,
-        voteInfo[_vote].voteHashes.drMerkleRoot,
-        voteInfo[_vote].voteHashes.tallyMerkleRoot
-      );
-    }
-  }
-
 
   /// @dev Proposes a block into the block relay.
-  /// @param _blockHash blockHash of the block proposed.
-  /// @param _epoch Witnet epoch to which the block belongs to.
-  /// @param _drMerkleRoot Merkle root belonging to the data requests.
-  /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
-  /// @param _previousVote Hash of block's hashes proposed in the previous epoch.
-  /// @param _arsLength Number of members of the ARS.
-  /// @param _arsMerkleRoot Merkle root belonging to the ARS membership.
+  /// @param _blockArguments Arguments of the superblock proposed
   /// @param _arsMerklePath merklePath to verify the membership to the ARS.
   /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
   /// @param _publicKeys public keys of the proposers, members of the ARS.
   function proposeBlock(
-    uint256 _blockHash,
-    uint256 _epoch,
-    uint256 _drMerkleRoot,
-    uint256 _tallyMerkleRoot,
-    uint256 _previousVote,
-    uint64 _arsLength,
-    uint256 _arsMerkleRoot,
-    uint256[] memory _arsMerklePath,
-    bytes memory _aggregatedSig,
-    bytes[] memory _publicKeys
-    )
-    private
-    blockDoesNotExist(_blockHash)
-    returns(uint256)
-  {
-    // 1. Check if the _publickeys are ARS members
-    for (uint i = 0; i < _publicKeys.length; i++) {
-      bytes memory publicKey = _publicKeys[i];
-      require(
-        verifyArsMembership(
-          _arsMerklePath,
-          _arsMerkleRoot,
-          // the index is the position in publickeys
-          i,
-          publicKey
-      ),
-        "Some of the public keys are not ARS members");
-    }
-
-    // 2. Aggregate the _publicKeys
-    uint256[4] memory pubKeyAgg;
-    pubKeyAgg = publickeysAggregation(_publicKeys);
-
-    // Define the vote
-    uint256 vote = uint256(
-      sha256(
-        abi.encodePacked(
-      _blockHash,
-      _epoch,
-      _drMerkleRoot,
-      _tallyMerkleRoot,
-      _previousVote)));
-
-    // 3. Verify the BLS signature with signatures and public keys aggregated
-    require(
-      verifyBlsSignature(
-        abi.encode(_blockHash),
-        _aggregatedSig,
-        pubKeyAgg
-        ),
-      "not valid BLS signature");
-
-    // 4. Add vote information if it's a new vote
-    if (voteInfo[vote].numberOfVotes == 0) {
-      // Add the vote to candidates
-      candidates.push(vote);
-      // Mapping the vote into its hashes
-      voteInfo[vote].voteHashes.blockHash = _blockHash;
-      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
-      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
-      voteInfo[vote].voteHashes.previousVote = _previousVote;
-      voteInfo[vote].voteHashes.epoch = _epoch;
-    }
-
-    // 5. Update the vote count
-    updateVoteCount(vote, _publicKeys.length, _arsLength);
-
-  }
-
-  /// @dev Proposes a block into the block relay.
-  /// @param _blockHashes merklePath to verify the membership to the ARS.
-  /// @param _arsMerklePath merklePath to verify the membership to the ARS.
-  /// @param _aggregatedSig aggregated signature (uncompressed format) from the proposers.
-  /// @param _publicKeys public keys of the proposers, members of the ARS.
-  function proposeBlock2(
-    uint256[7] memory _blockHashes,
-    // uint32 _blockIndex,
-    // uint256 _drMerkleRoot,
-    // uint32 _lastBlockIndex,
-    // uint32 _previousLastBlockIntex,
-    // uint64 _arsLength,
-    // uint256 _arsMerkleRoot,
+    uint256[7] memory _blockArguments,
     uint256[] memory _arsMerklePath,
     bytes memory _aggregatedSig,
     bytes[] memory _publicKeys
     )
     public
-    blockDoesNotExist(_blockHashes[3])
-    onlyOwner()
+    blockDoesNotExist(_blockArguments[3])
+    isAbsMember()
   {
-    // 1. Check if the _publickeys are ARS members
+    // Check if the _publickeys are ARS members
      for (uint i = 0; i < _publicKeys.length; i++) {
        bytes memory publicKey = _publicKeys[i];
        require(
         verifyArsMembership(
            _arsMerklePath,
-          _blockHashes[1],
+          _blockArguments[1],
           // the index is the position in publickeys
           i,
           publicKey
@@ -589,53 +464,19 @@ contract ActiveReputationSetBlockRelay is BlockRelayInterface {
          "Some of the public keys are not ARS members");
      }
 
-    // // 2. Aggregate the _publicKeys
-    // uint256[4] memory pubKeyAgg;
-    // pubKeyAgg = publickeysAggregation(_publicKeys);
-
-    checkBlsSignature(_blockHashes, _aggregatedSig, _publicKeys);
-
-    // Define the vote
-    //  uint256 vote = uint256(
-    //    sha256(
-    //      abi.encodePacked(
-    //    _blockHashes[0],
-    //    _blockHashes[1],
-    //    _blockHashes[2],
-    //    _blockHashes[3],
-    //    _blockHashes[4],
-    //    _blockHashes[5],
-    //    _tallyMerkleRoot)));
-       //_blockHashes[6])));
-
-    // // 3. Verify the BLS signature with signatures and public keys aggregated
-    // require(
-    //   verifyBlsSignature(
-    //     abi.encode(vote),
-    //     _aggregatedSig,
-    //     pubKeyAgg
-    //     ),
-    //   "not valid BLS signature");
-
-    // // 4. Add vote information if it's a new vote
-    // if (voteInfo[vote].numberOfVotes == 0) {
-    //   // Add the vote to candidates
-    //   candidates.push(vote);
-    //   // Mapping the vote into its hashes
-    //   voteInfo[vote].voteHashes.blockIndex = _blockIndex;
-    //   voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
-    //   voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
-    //   voteInfo[vote].voteHashes.lastBlockIndex = _lastBlockIndex;
-    //   voteInfo[vote].voteHashes.epoch = _epoch;
-    // }
-
-    // // 5. Update the vote count
-    // updateVoteCount(vote, _publicKeys.length, _arsLength);
-
+    checkBlsSignature(_blockArguments, _aggregatedSig, _publicKeys);
   }
 
+/// @dev calculates the hash of the superblock arguments.
+/// @param _arsLength number of members of the ARS.
+/// @param _arsMerkleRoot merkle root to prove ars membership.
+/// @param _drMerkleRoot merkle root of the data requests.
+/// @param _blockIndex index of the block in the superblock.
+/// @param _lastBlockHash last block hash.
+/// @param _previousLastBlockHash blockhash previous to the lastBlockHash.
+/// @param _tallyMerkleRoot merkle root of the tally.
 function calculateSuperblock(
- uint64 _arsLength,
+  uint64 _arsLength,
   uint256 _arsMerkleRoot,
   uint256 _drMerkleRoot,
   uint32 _blockIndex,
@@ -663,12 +504,10 @@ function calculateSuperblock(
   /// @param _drMerkleRoot Merkle root belonging to the data requests.
   /// @param _tallyMerkleRoot Merkle root belonging to the tallies.
   function postNewBlock(
-    //uint256 _vote,
     uint256 _blockHash,
     uint256 _epoch,
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot)
-    //uint256 _lastBlockIndex)
     private
     blockDoesNotExist(_blockHash)
   {

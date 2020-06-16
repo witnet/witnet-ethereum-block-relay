@@ -21,6 +21,14 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     uint256 _witnetGenesis, uint256 _epochSeconds, uint256 _firstBlock)
   ActiveReputationSetBlockRelay(_witnetGenesis, _epochSeconds, _firstBlock) public {}
 
+
+  // Ensure that the msg.sender is in the abs
+  modifier isAbsMember() override {
+
+    require(true == true, "Not a member of the abs");
+    _;
+  }
+
   function _fromCompressed(bytes memory _point) public returns(uint256[2] memory) {
     uint256[2] memory s;
     (s[0], s[1]) = BN256G1.fromCompressed(_point);
@@ -48,60 +56,6 @@ contract ARSBlockRelayTestHelper is ActiveReputationSetBlockRelay {
     return aggregatedSignature;
   }
 
-  function _proposeBlock(
-    bytes memory _message,
-    uint256 _blockHash,
-    uint256 _epoch,
-    uint256 _drMerkleRoot,
-    uint256 _tallyMerkleRoot,
-    uint256 _previousVote,
-    uint256 _arsMerkleRoot,
-    uint256[] memory _merklePath,
-    uint256[2] memory _aggregatedSig,
-    bytes[] memory _publicKeys
-    )
-    public
-    returns(uint256)
-  {
-     // Aggregate the _publicKeys
-    uint256[4] memory pubKeyAgg;
-    pubKeyAgg = publickeysAggregation(_publicKeys);
-    // Define the vote
-    uint256 vote = uint256(
-      sha256(
-        abi.encodePacked(
-      _blockHash,
-      _epoch,
-      _drMerkleRoot,
-      _tallyMerkleRoot,
-      _previousVote)));
-
-    //  Verify the BLS signature with signature and public key aggregated
-    require(
-      _verifyBlsSignature(
-        _message,
-        [_aggregatedSig[0], _aggregatedSig[1]],
-        pubKeyAgg
-        ),
-      "not valid BLS signature");
-
-    // Add vote information if it's a new vote
-    if (voteInfo[vote].numberOfVotes == 0) {
-      // Add the vote to candidates
-      candidates.push(vote);
-      // Mapping the vote into its hashes
-      voteInfo[vote].voteHashes.blockHash = _blockHash;
-      voteInfo[vote].voteHashes.drMerkleRoot = _drMerkleRoot;
-      voteInfo[vote].voteHashes.tallyMerkleRoot = _tallyMerkleRoot;
-      voteInfo[vote].voteHashes.previousVote = _previousVote;
-      voteInfo[vote].voteHashes.epoch = _epoch;
-    }
-
-    // Update the vote count
-    updateVoteCount(vote, _publicKeys.length, 2**_merklePath.length);
-    return(_blockHash);
-
-  }
 
   function _verifyBlsSignature(
     // Very similar to verifyBlsSignature but with the signature uncompressed as input
@@ -149,15 +103,6 @@ function _calculateSuperblock(
   uint256 _previousLastBlockHash,
   uint256 _tallyMerkleRoot
 ) public returns(uint256) {
-  bytes memory abihash = abi.encodePacked(
-      _arsLength,
-      _arsMerkleRoot,
-      _drMerkleRoot,
-      _blockIndex,
-      _lastBlockHash,
-      _previousLastBlockHash,
-      _tallyMerkleRoot);
-
   uint256 superblock = uint256(
        sha256(
         abi.encodePacked(
