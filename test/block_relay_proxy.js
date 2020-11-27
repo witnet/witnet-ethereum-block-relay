@@ -58,7 +58,7 @@ contract("Block relay Interface", accounts => {
       await blockRelayInstance2.postNewBlock(12, 2, 1, 1)
       await blockRelayInstance2.postNewBlock(13, 3, 1, 1)
       await blockRelayInstance2.postNewBlock(14, 4, 1, 1)
-      var controller = await blockRelayProxy.getController(1)
+      let controller = await blockRelayProxy.getController(1)
       assert.equal(controller, blockRelayInstance1.address)
       controller = await blockRelayProxy.getController(2)
       assert.equal(controller, blockRelayInstance2.address)
@@ -74,7 +74,7 @@ contract("Block relay Interface", accounts => {
         from: accounts[0],
       })
       // Lets test the controllers first
-      var controller = await blockRelayProxy.getController(1)
+      let controller = await blockRelayProxy.getController(1)
       assert.equal(controller, blockRelayInstance1.address)
       controller = await blockRelayProxy.getController(4)
       assert.equal(controller, blockRelayInstance2.address)
@@ -95,7 +95,7 @@ contract("Block relay Interface", accounts => {
     })
 
     it("should update the controller if no one inserted blocks for the ", async () => {
-      var controller = await blockRelayProxy.getController(5)
+      let controller = await blockRelayProxy.getController(5)
       assert.equal(controller, blockRelayInstance3.address)
       // Upgrade block relay instance 4
       await blockRelayProxy.upgradeBlockRelay(blockRelayInstance4.address, {
