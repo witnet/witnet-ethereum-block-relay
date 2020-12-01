@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-/* solhint-disable no-unused-vars*/
 
 pragma solidity 0.6.8;
 
@@ -137,7 +136,7 @@ contract TestBlockRelayV4 is BlockRelayInterface {
 
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
-  function isUpgradable(address _address) external view override returns(bool) {
+  function isUpgradable(address) external view override returns(bool) {
     return false;
   }
 

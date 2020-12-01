@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-/* solhint-disable no-unused-vars*/
 
 pragma solidity 0.6.8;
 
@@ -67,16 +66,8 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   }
 
   /// @dev Verifies the validity of a PoI against the DR merkle root
-  /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
-  /// @param _blockHash the blockHash
-  /// @param _index the index in the merkle tree of the element to verify
-  /// @param _element the leaf to be verified
   /// @return true or false depending the validity
-  function verifyDrPoi(
-    uint256[] calldata _poi,
-    uint256 _blockHash,
-    uint256 _index,
-    uint256 _element)
+  function verifyDrPoi(uint256[] calldata, uint256, uint256, uint256)
   external
   view
   override
