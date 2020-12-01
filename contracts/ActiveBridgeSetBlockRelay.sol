@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 /* solhint-disable max-states-count*/
 
-pragma solidity 0.6.8;
+pragma solidity 0.6.12;
 
 import "./ActiveBridgeSetInterface.sol";
 import "./BlockRelayInterface.sol";
