@@ -25,9 +25,9 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     // epoch of the last block
     uint256 epoch;
   }
-
-  // Address of the block pusher
-  address public witnet;
+  
+  // List of addresses authorized to post blocks
+  address[] public committee;
 
   // Last block reported
   Beacon public lastBlock;
@@ -37,9 +37,15 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   // Event emitted when a new block is posted to the contract
   event NewBlock(address indexed _from, uint256 _id);
 
-  // Only the owner should be able to push blocks
-  modifier isOwner() {
-    require(msg.sender == witnet, "Sender not authorized"); // If it is incorrect here, it reverts.
+  // Only the commitee defined when deploying the contract should be able to push blocks
+  modifier isAuthorized() {
+    bool senderAuthorized = false;
+    for (uint256 i; i < committee.length; i++) {
+      if (committee[i] == msg.sender) {
+        senderAuthorized = true;   
+      }       
+    }
+    require(senderAuthorized == true, "Sender not authorized");
     _; // Otherwise, it continues.
   }
 
@@ -55,11 +61,11 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     _;
   }
 
-  constructor() public{
+  constructor(address[] memory _committee) public{
     // Only the contract deployer is able to push blocks
-    witnet = msg.sender;
+    committee = _committee;
   }
-
+    
   /// @dev Read the beacon of the last block inserted
   /// @return bytes to be signed by bridge nodes
   function getLastBeacon()
@@ -136,10 +142,12 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @dev Verifies if the contract is upgradable
   /// @return true if the contract upgradable
   function isUpgradable(address _address) external view override returns(bool) {
-    if (_address == witnet) {
-      return true;
+    for (uint256 i; i < committee.length; i++) {
+      if (committee[i] == _address) {
+        return true;   
+      }
+        return false;
     }
-    return false;
   }
 
   /// @dev Post new block into the block relay
@@ -153,14 +161,14 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     uint256 _drMerkleRoot,
     uint256 _tallyMerkleRoot)
     external
-    isOwner
+    isAuthorized
     blockDoesNotExist(_blockHash)
   {
     lastBlock.blockHash = _blockHash;
     lastBlock.epoch = _epoch;
     blocks[_blockHash].drHashMerkleRoot = _drMerkleRoot;
     blocks[_blockHash].tallyHashMerkleRoot = _tallyMerkleRoot;
-    emit NewBlock(witnet, _blockHash);
+    emit NewBlock(msg.sender, _blockHash);
   }
 
   /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.

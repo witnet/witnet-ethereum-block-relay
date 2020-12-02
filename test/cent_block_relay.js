@@ -6,8 +6,9 @@ const testdata = require("./poi.json")
 contract("Centralized Block relay", accounts => {
   describe("Centralized Block relay test suite", () => {
     let blockRelayInstance
+    const committee = [accounts[0], accounts[1]]
     before(async () => {
-      blockRelayInstance = await CentralizedBlockRelay.new({
+      blockRelayInstance = await CentralizedBlockRelay.new(committee, {
         from: accounts[0],
       })
     })
@@ -44,8 +45,9 @@ contract("Centralized Block relay", accounts => {
       }), "The block already existed")
     })
 
-    it("should insert another block", async () => {
+    it("should insert another 2 blocks", async () => {
       const expectedId = "0x" + sha.sha256("second id")
+      const expectedId2 = "0x" + sha.sha256("third id")
       const epoch = 2
       const drRoot = 2
       const merkleRoot = 3
@@ -63,6 +65,21 @@ contract("Centralized Block relay", accounts => {
       )
       const beacon = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon, web3.utils.bytesToHex(concatenated))
+
+      const tx2 = blockRelayInstance.postNewBlock(expectedId2, epoch + 1, drRoot + 1, merkleRoot + 1, {
+        from: accounts[1],
+      })
+      await waitForHash(tx2)
+
+      const concatenated2 = web3.utils.hexToBytes(expectedId2).concat(
+        web3.utils.hexToBytes(
+          web3.utils.padLeft(
+            web3.utils.toHex(epoch + 1), 64
+          )
+        )
+      )
+      const beacon2 = await blockRelayInstance.getLastBeacon.call()
+      assert.equal(beacon2, web3.utils.bytesToHex(concatenated2))
     })
 
     it("should revert because an invalid address is trying to insert", async () => {
@@ -71,7 +88,7 @@ contract("Centralized Block relay", accounts => {
       const drRoot = 1
       const merkleRoot = 1
       await truffleAssert.reverts(blockRelayInstance.postNewBlock(expectedId, epoch, drRoot, merkleRoot, {
-        from: accounts[1],
+        from: accounts[2],
       }), "Sender not authorized")
     })
 
