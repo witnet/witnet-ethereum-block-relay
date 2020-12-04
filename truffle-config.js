@@ -3,14 +3,6 @@ require('dotenv').config();
 
 module.exports = {
   networks: {
-    test: {
-      provider: require("ganache-cli").provider({ gasLimit: 100000000, seed: 1234 }),
-      network_id: "*",
-    },
-    development: {
-      provider: require("ganache-cli").provider({ gasLimit: 100000000, seed: 1234 }),
-      network_id: "*",
-    },
     ropsten: {
       network_id: 3,
       host: "localhost",
