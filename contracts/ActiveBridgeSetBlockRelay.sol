@@ -23,6 +23,8 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     uint256 tallyHashMerkleRoot;
     // Hash of the vote that this block extends
     uint256 previousVote;
+    // Address of the relayer
+    address relayerAddress;
   }
 
   struct Beacon {
@@ -253,6 +255,19 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
   }
 
+  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @param _blockHash Hash of the block header.
+  /// @return address of the relayer.
+  function readRelayerAddress(uint256 _blockHash)
+    external
+    view
+    override
+    blockExists(_blockHash)
+  returns(address)
+  {
+    return blocks[_blockHash].relayerAddress;
+  }
+
   /// @dev Proposes a block into the block relay
   /// @param _blockHash Hash of the block header
   /// @param _epoch Epoch for which the block is proposed
@@ -367,6 +382,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     epochFinalizedBlock[_epoch] = voteInfo[_vote].voteHashes.blockHash;
     blocks[_blockHash].drHashMerkleRoot = _drMerkleRoot;
     blocks[_blockHash].tallyHashMerkleRoot = _tallyMerkleRoot;
+    blocks[_blockHash].relayerAddress = msg.sender;
     blocks[_blockHash].previousVote = _previousVote;
 
     // Select previous vote and corresponding epoch and blockHash

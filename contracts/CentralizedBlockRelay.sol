@@ -12,12 +12,15 @@ import "./BlockRelayInterface.sol";
  */
 contract CentralizedBlockRelay is BlockRelayInterface {
 
-  struct MerkleRoots {
+  struct BlockInfo {
     // hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
     // hash of the merkle root of the tallies in Witnet
     uint256 tallyHashMerkleRoot;
+    // address of the relayer
+    address relayerAddress;
   }
+  
 
   struct Beacon {
     // hash of the last block
@@ -32,7 +35,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   // Last block reported
   Beacon public lastBlock;
 
-  mapping (uint256 => MerkleRoots) public blocks;
+  mapping (uint256 => BlockInfo) public blocks;
 
   // Event emitted when a new block is posted to the contract
   event NewBlock(address indexed _from, uint256 _id);
@@ -146,8 +149,8 @@ contract CentralizedBlockRelay is BlockRelayInterface {
       if (committee[i] == _address) {
         return true;   
       }
-        return false;
     }
+    return false;
   }
 
   /// @dev Post new block into the block relay
@@ -168,6 +171,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     lastBlock.epoch = _epoch;
     blocks[_blockHash].drHashMerkleRoot = _drMerkleRoot;
     blocks[_blockHash].tallyHashMerkleRoot = _tallyMerkleRoot;
+    blocks[_blockHash].relayerAddress = msg.sender;
     emit NewBlock(msg.sender, _blockHash);
   }
 
@@ -193,6 +197,19 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   returns(uint256)
   {
     return blocks[_blockHash].tallyHashMerkleRoot;
+  }
+
+  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @param _blockHash Hash of the block header.
+  /// @return address of the relayer.
+  function readRelayerAddress(uint256 _blockHash)
+    external
+    view
+    override
+    blockExists(_blockHash)
+  returns(address)
+  {
+    return blocks[_blockHash].relayerAddress;
   }
 
   /// @dev Verifies the validity of a PoI

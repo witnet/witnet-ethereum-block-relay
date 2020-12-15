@@ -99,6 +99,18 @@ contract BlockRelayProxy {
       _element);
   }
 
+  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @param _blockHash Hash of the block header.
+  /// @return address of the relayer.
+  function readRelayerAddress(uint256 _blockHash, uint256 _epoch)
+    external
+    view
+  returns(address)
+  {
+    address controller = getController(_epoch);
+    return BlockRelayInterface(controller).readRelayerAddress(_blockHash);
+  }
+
   /// @notice Upgrades the block relay if the current one is upgradeable
   /// @param _newAddress address of the new block relay to upgrade
   function upgradeBlockRelay(address _newAddress) external notIdentical(_newAddress) {

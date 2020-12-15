@@ -54,4 +54,12 @@ interface BlockRelayInterface {
   /// @return true if contract is upgradable
   function isUpgradable(address _address) external view returns(bool);
 
+  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @param _blockHash Hash of the block header.
+  /// @return address of the relayer.
+  function readRelayerAddress(uint256 _blockHash)
+    external
+    view
+  returns(address);
+
 }

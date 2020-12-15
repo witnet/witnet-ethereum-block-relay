@@ -33,6 +33,7 @@ contract("Centralized Block relay", accounts => {
       )
       const beacon = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon, web3.utils.bytesToHex(concatenated))
+      assert.equal(accounts[0], await blockRelayInstance.readRelayerAddress.call(expectedId))
     })
 
     it("should revert when inserting the same block", async () => {
@@ -80,6 +81,7 @@ contract("Centralized Block relay", accounts => {
       )
       const beacon2 = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon2, web3.utils.bytesToHex(concatenated2))
+      assert.equal(accounts[1], await blockRelayInstance.readRelayerAddress.call(expectedId2))
     })
 
     it("should revert because an invalid address is trying to insert", async () => {

@@ -17,6 +17,8 @@ contract TestBlockRelayV2 is BlockRelayInterface {
     uint256 drHashMerkleRoot;
     // hash of the merkle root of the tallies in Witnet
     uint256 tallyHashMerkleRoot;
+    // relayer address
+    address relayerAddress;
     // Points to previous vote
     uint256 previousVote;
   }
@@ -61,6 +63,7 @@ contract TestBlockRelayV2 is BlockRelayInterface {
     lastBlock.blockHash = id;
     lastBlock.epoch = _epoch;
     blocks[id].drHashMerkleRoot = _drMerkleRoot;
+    blocks[id].relayerAddress = msg.sender;
     blocks[id].tallyHashMerkleRoot = _tallyMerkleRoot;
     emit NewBlock(msg.sender, id);
   }
@@ -162,5 +165,17 @@ contract TestBlockRelayV2 is BlockRelayInterface {
     }
     root = _root + 1;
     return true;
+  }
+
+  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @param _blockHash Hash of the block header.
+  /// @return address of the relayer.
+  function readRelayerAddress(uint256 _blockHash)
+    external
+    view
+    override
+    returns(address)
+  {
+    return blocks[_blockHash].relayerAddress;
   }
 }
