@@ -54,13 +54,13 @@ contract CentralizedBlockRelay is BlockRelayInterface {
 
   // Ensures block exists
   modifier blockExists(uint256 _id){
-    require(blocks[_id].drHashMerkleRoot!=0, "Non-existing block");
+    require(blocks[_id].drHashMerkleRoot != 0, "Non-existing block");
     _;
   }
 
   // Ensures block does not exist
   modifier blockDoesNotExist(uint256 _id){
-    require(blocks[_id].drHashMerkleRoot==0, "The block already existed");
+    require(blocks[_id].drHashMerkleRoot == 0, "The block already existed");
     _;
   }
 
@@ -183,7 +183,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     view
     blockExists(_blockHash)
   returns(uint256)
-    {
+  {
     return blocks[_blockHash].drHashMerkleRoot;
   }
 
