@@ -24,21 +24,26 @@ module.exports = {
       port: 8542,
     },
   },
-  // Set default mocha options here, use special reporters etc.
   mocha: {
-    // timeout: 100000
+    reporter: 'eth-gas-reporter',
+    reporterOptions: {
+        coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+        currency: "USD",
+        gasPrice: 100,
+        excludeContracts: ['Migrations'],
+        src: "contracts"
+    },
+    timeout: 100000,
+    useColors: true
   },
-  // Configure your compilers
   compilers: {
     solc: {
-      version: "0.6.12",    // Fetch exact version from solc-bin (default: truffle's version)
-      // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
-      settings: {          // See the solidity docs for advice about optimization and evmVersion
+      version: "0.6.12",
+      settings: {
         optimizer: {
           enabled: true,
           runs: 200
         },
-      //  evmVersion: "byzantium"
       }
     },
   },
