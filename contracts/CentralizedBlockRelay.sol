@@ -110,7 +110,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   returns(bool)
   {
     uint256 drMerkleRoot = blocks[_blockHash].drHashMerkleRoot;
-    return(verifyPoi(
+    return(_verifyPoi(
       _poi,
       drMerkleRoot,
       _index,
@@ -135,7 +135,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   returns(bool)
   {
     uint256 tallyMerkleRoot = blocks[_blockHash].tallyHashMerkleRoot;
-    return(verifyPoi(
+    return(_verifyPoi(
       _poi,
       tallyMerkleRoot,
       _index,
@@ -218,7 +218,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @param _index the index in the merkle tree of the element to verify
   /// @param _element the leaf to be verified
   /// @return true or false depending the validity
-  function verifyPoi(
+  function _verifyPoi(
     uint256[] memory _poi,
     uint256 _root,
     uint256 _index,

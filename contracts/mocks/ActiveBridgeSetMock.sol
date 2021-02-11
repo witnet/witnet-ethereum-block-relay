@@ -16,10 +16,6 @@ contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
 
   uint32 public count;
 
-  function absIsMember(address _address) external view override returns (bool) {
-    return fakeABS[_address];
-  }
-
   // Pushes the activity in the ABS
   function pushActivity() external {
     address _address = msg.sender;
@@ -29,14 +25,19 @@ contract ActiveBridgeSetMock is ActiveBridgeSetInterface {
     }
   }
 
-  // Gets the number of active identities in the ABS
-  function absCount() external view override returns (uint32) {
-    return count;
-  }
-
   // Sets the number of members in the ABS
   function setAbsIdentitiesNumber(uint32 _identitiesNumber) external {
     count = _identitiesNumber;
+  }
+
+  // Returns true if address is member of ABS
+  function absIsMember(address _address) external view override returns (bool) {
+    return fakeABS[_address];
+  }
+
+  // Gets the number of active identities in the ABS
+  function absCount() external view override returns (uint32) {
+    return count;
   }
 
 }

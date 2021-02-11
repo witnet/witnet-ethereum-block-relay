@@ -14,17 +14,18 @@ import "./BlockRelayInterface.sol";
  */
 contract BlockRelayProxy {
 
-  // Address of the current controller
-  address internal blockRelayAddress;
-  // Current interface to the controller
-  BlockRelayInterface internal blockRelayInstance;
-
   struct ControllerInfo {
     // last epoch seen by a controller
     uint256 lastEpoch;
     // address of the controller
     address blockRelayController;
   }
+
+  // Address of the current controller
+  address internal blockRelayAddress;
+  
+  // Current interface to the controller
+  BlockRelayInterface internal blockRelayInstance;
 
   // array containing the information about controllers
   ControllerInfo[] internal controllers;
