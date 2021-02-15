@@ -27,6 +27,9 @@
     "ethereum"
   ],
   "license": "GPL-3.0",
+  "dependencies": {
+    "@openzeppelin/contracts": "3.2.0"
+  },
   "devDependencies": {
     "dotenv": "8.2.0",
     "eslint": "7.19.0",
@@ -40,6 +43,7 @@
     "js-sha256": "0.9.0",
     "solidity-coverage": "0.7.14",
     "truffle": "5.1.65",
+    "@openzeppelin/test-helpers": "^0.5.5",
     "truffle-assertions": "0.9.2",
     "truffle-flattener": "git+https://github.com/witnet/truffle-flattener.git#single-experimental",
     "@truffle/hdwallet-provider": "1.2.1",

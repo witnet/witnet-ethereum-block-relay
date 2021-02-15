@@ -2,6 +2,7 @@
 
 pragma solidity 0.6.12;
 
+import "@openzeppelin/contracts/math/SafeMath.sol";
 import "./BlockRelayInterface.sol";
 
 
@@ -12,6 +13,9 @@ import "./BlockRelayInterface.sol";
  */
 contract CentralizedBlockRelay is BlockRelayInterface {
 
+  // Block reporting is not subject to increases
+  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
+
   struct BlockInfo {
     // hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
@@ -19,6 +23,8 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     uint256 tallyHashMerkleRoot;
     // address of the relayer
     address relayerAddress;
+    // flag to indicate that the relayer is paid
+    bool isPaid;
   }
   
 
@@ -238,6 +244,44 @@ contract CentralizedBlockRelay is BlockRelayInterface {
       index = index >> 1;
     }
     return _root == tree;
+  }
+  /// @dev This function checks if the relayer has been paid
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer has been paid, false otherwise
+  function isRelayerPaid(uint256 _blockHash) internal returns(bool){
+    return blocks[_blockHash].isPaid;
+  }
+
+  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer is paid, false otherwise
+  function payRelayer(uint256 _blockHash) external payable returns(bool){
+    if (isRelayerPaid(_blockHash) == false) {
+      // Check if rewards are covering gas costs
+      isPayingGasCosts(msg.value);
+
+      blocks[_blockHash].isPaid == true;
+      address payable relayer = payable(blocks[_blockHash].relayerAddress);
+      relayer.transfer(msg.value);
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /// @dev Estimate the amount of reward we need to insert for a given gas price
+  /// @param _gasPrice The gas price for which we need to calculate the rewards
+  /// @return The blockReward to be included for the given gas price
+  function estimateGasCost(uint256 _gasPrice) public view returns(uint256){
+    return SafeMath.mul(_gasPrice, MAX_REPORT_BLOCK_GAS);
+  }
+
+  /// @dev Ensures that rewards cover the cost of post a block in the Block Relay
+  /// @param _blockReward The amount for rewarding the reporting of the blocks
+  function isPayingGasCosts(uint256 _blockReward) internal view {
+    uint256 minBlockReward =  estimateGasCost(tx.gasprice);
+    require(_blockReward >= minBlockReward, "Block reward should cover gas expenses. Check the estimateGasCost method.");
   }
 
 }
