@@ -248,19 +248,19 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @dev This function checks if the relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
-  function isRelayerPaid(uint256 _blockHash) internal returns(bool){
+  function isRelayerPaid(uint256 _blockHash) internal view returns(bool){
     return blocks[_blockHash].isPaid;
   }
 
   /// @dev Pay the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer is paid, false otherwise
-  function payRelayer(uint256 _blockHash) external payable returns(bool){
-    if (isRelayerPaid(_blockHash) == false) {
-      // Check if rewards are covering gas costs
-      isPayingGasCosts(msg.value);
+  function payRelayer(uint256 _blockHash) external payable returns(bool) {
+    // Check if rewards are covering gas costs
+    isPayingGasCosts(msg.value);
 
-      blocks[_blockHash].isPaid == true;
+    if (isRelayerPaid(_blockHash) == false) {
+      blocks[_blockHash].isPaid = true;
       address payable relayer = payable(blocks[_blockHash].relayerAddress);
       relayer.transfer(msg.value);
 
@@ -273,7 +273,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @dev Estimate the amount of reward we need to insert for a given gas price
   /// @param _gasPrice The gas price for which we need to calculate the rewards
   /// @return The blockReward to be included for the given gas price
-  function estimateGasCost(uint256 _gasPrice) public view returns(uint256){
+  function estimateGasCost(uint256 _gasPrice) public pure returns(uint256){
     return SafeMath.mul(_gasPrice, MAX_REPORT_BLOCK_GAS);
   }
 

@@ -2,6 +2,15 @@ const CentralizedBlockRelay = artifacts.require("CentralizedBlockRelay")
 const sha = require("js-sha256")
 const truffleAssert = require("truffle-assertions")
 const testdata = require("./poi.json")
+const {
+  BN,
+  expectEvent,
+  expectRevert,
+  balance,
+  ether,
+} = require("@openzeppelin/test-helpers")
+const { expect } = require("chai")
+
 
 contract("Centralized Block relay", accounts => {
   describe("Centralized Block relay test suite", () => {
@@ -34,6 +43,83 @@ contract("Centralized Block relay", accounts => {
       const beacon = await blockRelayInstance.getLastBeacon.call()
       assert.equal(beacon, web3.utils.bytesToHex(concatenated))
       assert.equal(accounts[0], await blockRelayInstance.readRelayerAddress.call(expectedId))
+    })
+
+    it("should revert if the block reward is not enough", async () => {
+      const expectedId = "0x" + sha.sha256("first id")
+      await expectRevert(
+        blockRelayInstance.payRelayer(
+          expectedId, {
+            from: accounts[1],
+            value: ether("0"),
+            gasPrice: 1,
+          }
+        ),
+        "Block reward should cover gas expenses. Check the estimateGasCost method")
+    })
+
+    it("should pay to the block relayer", async () => {
+      const expectedId = "0x" + sha.sha256("first id")
+      // First, we use the call to check the boolean result
+      const result = await blockRelayInstance.payRelayer.call(
+        expectedId, {
+          from: accounts[1],
+          value: ether("1"),
+          gasPrice: 1,
+        }
+      )
+      assert.equal(result, true)
+
+      // Later we use the real value transfer
+      const relayerTracker = await balance.tracker(accounts[0])
+      const relayerInitialBalance = await relayerTracker.get()
+      const tx = blockRelayInstance.payRelayer(
+        expectedId, {
+          from: accounts[1],
+          value: ether("1"),
+          gasPrice: 1,
+        }
+      )
+      await waitForHash(tx)
+
+      const relayerFinalBalance = await relayerTracker.get()
+      expect(
+        relayerFinalBalance.eq(relayerInitialBalance
+          .add(ether("1"))
+        ),
+        "relayer balance should have increased after payRelayer function upgrade by 1 eth",
+      ).to.equal(true)
+    })
+
+    it("should not pay to the block relayer when is called more than once", async () => {
+      const expectedId = "0x" + sha.sha256("first id")
+      // First, we use the call to check the boolean result
+      const result = await blockRelayInstance.payRelayer.call(
+        expectedId, {
+          from: accounts[1],
+          value: ether("1"),
+          gasPrice: 1,
+        }
+      )
+      assert.equal(result, false)
+
+      // Later we use the real value transfer
+      const relayerTracker = await balance.tracker(accounts[0])
+      const relayerInitialBalance = await relayerTracker.get()
+      const tx = blockRelayInstance.payRelayer(
+        expectedId, {
+          from: accounts[1],
+          value: ether("1"),
+          gasPrice: 1,
+        }
+      )
+      await waitForHash(tx)
+
+      const relayerFinalBalance = await relayerTracker.get()
+      expect(
+        relayerFinalBalance.eq(relayerInitialBalance),
+        "relayer balance should not increase",
+      ).to.equal(true)
     })
 
     it("should revert when inserting the same block", async () => {
