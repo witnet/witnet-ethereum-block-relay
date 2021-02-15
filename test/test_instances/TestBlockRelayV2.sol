@@ -178,4 +178,12 @@ contract TestBlockRelayV2 is BlockRelayInterface {
   {
     return blocks[_blockHash].relayerAddress;
   }
+
+  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer is paid, false otherwise
+  function payRelayer(uint256 _blockHash) external payable override returns(bool) {
+    // TODO Review this function in that kind of bridge
+    return true;
+  }
 }

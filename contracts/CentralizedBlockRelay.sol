@@ -255,7 +255,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @dev Pay the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer is paid, false otherwise
-  function payRelayer(uint256 _blockHash) external payable returns(bool) {
+  function payRelayer(uint256 _blockHash) external payable override returns(bool) {
     // Check if rewards are covering gas costs
     isPayingGasCosts(msg.value);
 
@@ -266,6 +266,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
 
       return true;
     } else {
+      msg.sender.transfer(msg.value);
       return false;
     }
   }

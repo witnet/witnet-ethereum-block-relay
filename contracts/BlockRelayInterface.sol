@@ -62,4 +62,9 @@ interface BlockRelayInterface {
     view
   returns(address);
 
+  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer is paid, false otherwise
+  function payRelayer(uint256 _blockHash) external payable returns(bool);
+
 }

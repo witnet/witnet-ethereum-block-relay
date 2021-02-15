@@ -112,6 +112,14 @@ contract BlockRelayProxy {
     return BlockRelayInterface(controller).readRelayerAddress(_blockHash);
   }
 
+  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer is paid, false otherwise
+  function payRelayer(uint256 _blockHash, uint256 _epoch) external payable returns(bool){
+    address controller = getController(_epoch);
+    return BlockRelayInterface(controller).payRelayer{value: msg.value}(_blockHash);
+  }
+
   /// @notice Upgrades the block relay if the current one is upgradeable
   /// @param _newAddress address of the new block relay to upgrade
   function upgradeBlockRelay(address _newAddress) external notIdentical(_newAddress) {
