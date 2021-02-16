@@ -12,14 +12,20 @@ import "../../contracts/BlockRelayInterface.sol";
  */
 contract TestBlockRelayV1 is BlockRelayInterface {
 
+  // Block reporting is not subject to increases
+  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
+
   struct MerkleRoots {
-    // hash of the merkle root of the DRs in Witnet
+    // Hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
-    // hash of the merkle root of the tallies in Witnet
+    // Hash of the merkle root of the tallies in Witnet
     uint256 tallyHashMerkleRoot;
-    address relayerAddress;
-    // Points to previous vote
+    // Hash of the vote that this block extends
     uint256 previousVote;
+    // Address of the relayer
+    address relayerAddress;
+    // Flag to indicate that the relayer is paid
+    bool isPaid;
   }
 
   struct Beacon {
@@ -196,9 +202,14 @@ contract TestBlockRelayV1 is BlockRelayInterface {
 
   /// @dev Pay the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
-  /// @return true if the relayer is paid, false otherwise
-  function payRelayer(uint256 _blockHash) external payable override returns(bool) {
+  function payRelayer(uint256 _blockHash) external payable override {
     // TODO Review this function in that kind of bridge
-    return true;
+  }
+
+  /// @dev This function checks if the relayer has been paid
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer has been paid, false otherwise
+  function isRelayerPaid(uint256 _blockHash) public view override returns(bool){
+    return blocks[_blockHash].isPaid;
   }
 }
