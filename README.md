@@ -1,13 +1,15 @@
-# witnet-ethereum-block-relay
+# witnet-ethereum-block-relay [![](https://travis-ci.com/witnet/witnet-ethereum-block-relay.svg?branch=master)](https://travis-ci.com/witnet/witnet-ethereum-block-relay)
 
 `witnet-ethereum-block-relay` is an open source implementation of Witnet Block Relay for EVM-compatible blockchains.
 
 DISCLAIMER: this is a work in progress, by which we mean the contract could still be vulnerable to attacks. Use at your own risk.
 
+
 ## About WBI and the Block Relay
 
 The Bridge Nodes interact through the Witnet Bridge Interface (hereafter, "WBI"): a smart contract in charge of facilitating the communication between Witnet and smart contract platforms, such as Ethereum, click [here][wbi] for more information.
 The block headers in Witnet need to be available to the WBI, meaning that those headers need to be stored in some contract in Witnet, the Block Relay. In order to assure the validity of these block headers, the Block Relay must guarantee a consensus protocol and a Finality Gadget. The documentation about the stages of the Block Relay can be found [here][block-relay].
+
 
 ## Connecting the Bridge and the Block Relay
 
@@ -25,6 +27,7 @@ The proxy contract has the `upgradeBlockRelay` function which is in charge of as
 
 In order not to lose the state of the replaced controller, the proxy maintains a mapping between the last block stored by each of the controllers. When asking for a specific block in a specific epoch, the proxy derives the controller it should ask to, and computes operations against it. In summary, the state of the replaced controllers is maintained. This is important, as replacing block relay controllers without taking into account previous states might leave data requests in an unverifiable state.
 
+
 ## BlockRelay based on ABS
 
 The `ActiveBridgeSetBlockRelay` is a work in progress contract that implements the Active Bridge Set (ABS) as the set in charge of proposing and posting blocks to the Block Relay. The ABS is a subset of bridge nodes and is updated in the contract when posting a block through the WBI.
@@ -41,9 +44,11 @@ Limitations:
 
 1. When a block is finalized by the ABS, it finalizes the previous pending ones (if needed). This means that may happen that the members of ABS for an epoch _n_ are the ones finalizing votes for epochs in which they were not members.
 
+
 ## Contracts
 
 This repository contains a proxy and two Block Relay contracts: the first is centralized and the second is ABS-based.
+
 
 ### BlockRelayProxy
 
@@ -131,6 +136,7 @@ The `CentralizedBlockRelay` contract contains the following methods:
     - *_index* the index in the merkle tree of the element to verify
     - *_element* the leaf to be verified
 
+
 ### ActiveBridgeSetBlockRelay
 
 The `ActiveBridgeSetBlockRelay` contract is similar to the `CentralizedBlockRelay` but instead of being centralized, the members of the ABS are in charge of proposing blocks.
@@ -155,10 +161,43 @@ The following functions differ from the `CentralizedBlockRelay`:
     - *_tallyMerkleRoot*: the root hash of the tallies-only merkle tree as contained in the block header.
     - *_previousVote*: the previousVote that this posted block's vote extends.
 
+
 ## Known limitations:
 
 - `CentralizedBlockRelay`: as the name suggests, this block relay is centralized, only the deployer of the contract is able to push blocks.
 - `ActiveBridgeSetBlockRelay`: the ABS stays the same until a block is finalized. A block can be proposed more than once by the same ABS member and only for one epoch previous to the current epoch.
+
+
+## Benchmark
+
+```bash
+·--------------------------------------------------------|---------------------------|----------------------------·
+|          Solc version: 0.6.12+commit.27d51765          ·  Optimizer enabled: true  ·         Runs: 200          │
+·························································|···························|·····························
+|  Methods                                               ·                                                        │
+······························|··························|·············|·············|·············|···············
+|  Contract                   ·  Method                  ·  Min        ·  Max        ·  Avg        ·  # calls     │
+······························|··························|·············|·············|·············|···············
+|  ActiveBridgeSetBlockRelay  ·  proposeBlock            ·      89877  ·     365059  ·     230565  ·          37  │
+······························|··························|·············|·············|·············|···············
+|  ActiveBridgeSetMock        ·  pushActivity            ·      48957  ·      63957  ·      56100  ·          21  │
+······························|··························|·············|·············|·············|···············
+|  ActiveBridgeSetMock        ·  setAbsIdentitiesNumber  ·          -  ·          -  ·      23063  ·           1  │
+······························|··························|·············|·············|·············|···············
+|  BlockRelayProxy            ·  upgradeBlockRelay       ·      48913  ·      89777  ·      73257  ·           5  │
+······························|··························|·············|·············|·············|···············
+|  CentralizedBlockRelay      ·  postNewBlock            ·      46740  ·     106740  ·      80274  ·          39  │
+······························|··························|·············|·············|·············|···············
+|  Deployments                                           ·                                         ·  % of limit  │
+·························································|·············|·············|·············|···············
+|  ActiveBridgeSetMock                                   ·          -  ·          -  ·     167965  ·       2.5 %  │
+·························································|·············|·············|·············|···············
+|  BlockRelayProxy                                       ·          -  ·          -  ·     661658  ·       9.8 %  │
+·························································|·············|·············|·············|···············
+|  CentralizedBlockRelay                                 ·          -  ·          -  ·     583196  ·       8.7 %  |
+·--------------------------------------------------------|-------------|-------------|-------------|--------------·
+```
+
 
 ## Future steps
 
@@ -169,6 +208,7 @@ By doing so, it must include the ARS merklelization, as well as the proof-of-mem
 [reputation-system]: https://github.com/witnet/research/blob/master/reputation/docs/initialization.md
 [block-relay]: https://github.com/witnet/research/blob/master/bridge/docs/block_relay.md
 [wbi]: https://github.com/witnet/research/blob/master/bridge/docs/WBI.md
+
 
 ## License
 
