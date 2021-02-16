@@ -248,27 +248,20 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   /// @dev This function checks if the relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
-  function isRelayerPaid(uint256 _blockHash) internal view returns(bool){
+  function isRelayerPaid(uint256 _blockHash) public view override returns(bool){
     return blocks[_blockHash].isPaid;
   }
 
   /// @dev Pay the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
-  /// @return true if the relayer is paid, false otherwise
-  function payRelayer(uint256 _blockHash) external payable override returns(bool) {
+  function payRelayer(uint256 _blockHash) external payable override {
+    require(isRelayerPaid(_blockHash) == false, "The relayer has already been paid");
     // Check if rewards are covering gas costs
     isPayingGasCosts(msg.value);
 
-    if (isRelayerPaid(_blockHash) == false) {
-      blocks[_blockHash].isPaid = true;
-      address payable relayer = payable(blocks[_blockHash].relayerAddress);
-      relayer.transfer(msg.value);
-
-      return true;
-    } else {
-      msg.sender.transfer(msg.value);
-      return false;
-    }
+    blocks[_blockHash].isPaid = true;
+    address payable relayer = payable(blocks[_blockHash].relayerAddress);
+    relayer.transfer(msg.value);
   }
 
   /// @dev Estimate the amount of reward we need to insert for a given gas price

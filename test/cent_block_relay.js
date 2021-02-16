@@ -3,14 +3,11 @@ const sha = require("js-sha256")
 const truffleAssert = require("truffle-assertions")
 const testdata = require("./poi.json")
 const {
-  BN,
-  expectEvent,
   expectRevert,
   balance,
   ether,
 } = require("@openzeppelin/test-helpers")
 const { expect } = require("chai")
-
 
 contract("Centralized Block relay", accounts => {
   describe("Centralized Block relay test suite", () => {
@@ -60,17 +57,11 @@ contract("Centralized Block relay", accounts => {
 
     it("should pay to the block relayer", async () => {
       const expectedId = "0x" + sha.sha256("first id")
-      // First, we use the call to check the boolean result
-      const result = await blockRelayInstance.payRelayer.call(
-        expectedId, {
-          from: accounts[1],
-          value: ether("1"),
-          gasPrice: 1,
-        }
-      )
-      assert.equal(result, true)
+      // First, we check relayer has not been paid before
+      const result = await blockRelayInstance.isRelayerPaid.call(expectedId)
+      assert.equal(result, false)
 
-      // Later we use the real value transfer
+      // Later we transfer the block reward to the relayer
       const relayerTracker = await balance.tracker(accounts[0])
       const relayerInitialBalance = await relayerTracker.get()
       const tx = blockRelayInstance.payRelayer(
@@ -93,33 +84,20 @@ contract("Centralized Block relay", accounts => {
 
     it("should not pay to the block relayer when is called more than once", async () => {
       const expectedId = "0x" + sha.sha256("first id")
-      // First, we use the call to check the boolean result
-      const result = await blockRelayInstance.payRelayer.call(
-        expectedId, {
-          from: accounts[1],
-          value: ether("1"),
-          gasPrice: 1,
-        }
-      )
-      assert.equal(result, false)
+      // In this case, the relayer was paid before
+      const result = await blockRelayInstance.isRelayerPaid.call(expectedId)
+      assert.equal(result, true)
 
-      // Later we use the real value transfer
-      const relayerTracker = await balance.tracker(accounts[0])
-      const relayerInitialBalance = await relayerTracker.get()
-      const tx = blockRelayInstance.payRelayer(
-        expectedId, {
-          from: accounts[1],
-          value: ether("1"),
-          gasPrice: 1,
-        }
-      )
-      await waitForHash(tx)
-
-      const relayerFinalBalance = await relayerTracker.get()
-      expect(
-        relayerFinalBalance.eq(relayerInitialBalance),
-        "relayer balance should not increase",
-      ).to.equal(true)
+      // So it would revert the transaction
+      await expectRevert(
+        blockRelayInstance.payRelayer(
+          expectedId, {
+            from: accounts[1],
+            value: ether("0"),
+            gasPrice: 1,
+          }
+        ),
+        "The relayer has already been paid")
     })
 
     it("should revert when inserting the same block", async () => {
