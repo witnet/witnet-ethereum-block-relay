@@ -93,7 +93,7 @@ contract("Centralized Block relay", accounts => {
         blockRelayInstance.payRelayer(
           expectedId, {
             from: accounts[1],
-            value: ether("0"),
+            value: ether("1"),
             gasPrice: 1,
           }
         ),

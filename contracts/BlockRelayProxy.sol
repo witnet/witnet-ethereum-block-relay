@@ -100,7 +100,7 @@ contract BlockRelayProxy {
       _element);
   }
 
-  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @dev Retrieves address of the relayer that relayed a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return address of the relayer.
   function readRelayerAddress(uint256 _blockHash, uint256 _epoch)
@@ -112,14 +112,14 @@ contract BlockRelayProxy {
     return BlockRelayInterface(controller).readRelayerAddress(_blockHash);
   }
 
-  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @dev Pays the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
   function payRelayer(uint256 _blockHash, uint256 _epoch) external payable {
     address controller = getController(_epoch);
     return BlockRelayInterface(controller).payRelayer{value: msg.value}(_blockHash);
   }
 
-  /// @dev This function checks if the relayer has been paid
+  /// @dev Checks if the block relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
   function isRelayerPaid(uint256 _blockHash, uint256 _epoch) public view returns(bool) {

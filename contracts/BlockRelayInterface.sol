@@ -13,6 +13,10 @@ pragma solidity >=0.6.0 <0.7.0;
  */
 interface BlockRelayInterface {
 
+  /// @dev Pays the block reward to the relayer in case it has not been paid before
+  /// @param _blockHash Hash of the block header
+  function payRelayer(uint256 _blockHash) external payable;
+
   /// @notice Returns the beacon from the last inserted block.
   /// The last beacon (in bytes) will be used by Witnet Bridge nodes to compute their eligibility.
   /// @return last beacon in bytes
@@ -25,6 +29,11 @@ interface BlockRelayInterface {
   /// @notice Returns the latest hash reported to the block relay
   /// @return blockhash
   function getLastHash() external view returns(uint256);
+
+  /// @dev Checks if the relayer has been paid
+  /// @param _blockHash Hash of the block header
+  /// @return true if the relayer has been paid, false otherwise
+  function isRelayerPaid(uint256 _blockHash) external view returns(bool);
 
   /// @notice Verifies the validity of a data request PoI against the DR merkle root
   /// @param _poi the proof of inclusion as [sibling1, sibling2,..]
@@ -54,21 +63,11 @@ interface BlockRelayInterface {
   /// @return true if contract is upgradable
   function isUpgradable(address _address) external view returns(bool);
 
-  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @dev Retrieves address of the relayer that relayed a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return address of the relayer.
   function readRelayerAddress(uint256 _blockHash)
     external
     view
   returns(address);
-
-  /// @dev Pay the block reward to the relayer in case it has not been paid before
-  /// @param _blockHash Hash of the block header
-  function payRelayer(uint256 _blockHash) external payable;
-
-  /// @dev This function checks if the relayer has been paid
-  /// @param _blockHash Hash of the block header
-  /// @return true if the relayer has been paid, false otherwise
-  function isRelayerPaid(uint256 _blockHash) external view returns(bool);
-
 }

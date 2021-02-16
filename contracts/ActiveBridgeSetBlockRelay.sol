@@ -16,9 +16,6 @@ import "./BlockRelayInterface.sol";
  */
 contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
-  // Block reporting is not subject to increases
-  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
-
   struct MerkleRoots {
     // Hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
@@ -53,6 +50,9 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     uint256 numberOfVotes;
     Hashes voteHashes;
   }
+
+  // Maximum amount of gas for reporting a Block (not subject to increases)
+  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
 
   // Array with the votes for the proposed blocks
   uint256[] public candidates;
@@ -152,7 +152,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     witnet = msg.sender;
   }
 
-  /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
+  /// @dev Retrieves the requests-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header
   /// @return Requests-only merkle root hash in the block header.
   function readDrMerkleRoot(uint256 _blockHash)
@@ -164,7 +164,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     return blocks[_blockHash].drHashMerkleRoot;
   }
 
-  /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
+  /// @dev Retrieves the tallies-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
@@ -260,7 +260,7 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
 
   }
 
-  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @dev Retrieves address of the relayer that relayed a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return address of the relayer.
   function readRelayerAddress(uint256 _blockHash)
@@ -273,13 +273,13 @@ contract ActiveBridgeSetBlockRelay is BlockRelayInterface {
     return blocks[_blockHash].relayerAddress;
   }
 
-  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @dev Pays the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
   function payRelayer(uint256 _blockHash) external payable override {
-    // TODO Review this function in that kind of bridge
+    // TODO Not implemented yet for this bridge implementation
   }
 
-  /// @dev This function checks if the relayer has been paid
+  /// @dev Checks if the relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
   function isRelayerPaid(uint256 _blockHash) public view override returns(bool){

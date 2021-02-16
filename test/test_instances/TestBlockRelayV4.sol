@@ -12,9 +12,6 @@ import "../../contracts/BlockRelayInterface.sol";
  */
 contract TestBlockRelayV4 is BlockRelayInterface {
 
-  // Block reporting is not subject to increases
-  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
-
   struct MerkleRoots {
     // Hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
@@ -34,6 +31,9 @@ contract TestBlockRelayV4 is BlockRelayInterface {
     // epoch of the last block
     uint256 epoch;
   }
+
+  // Maximum amount of gas for reporting a Block (not subject to increases)
+  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
 
   // Address of the block pusher
   address public witnet;
@@ -177,7 +177,7 @@ contract TestBlockRelayV4 is BlockRelayInterface {
     return true;
   }
 
-  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @dev Retrieves address of the relayer that relayed a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return address of the relayer.
   function readRelayerAddress(uint256 _blockHash)
@@ -189,13 +189,13 @@ contract TestBlockRelayV4 is BlockRelayInterface {
     return blocks[_blockHash].relayerAddress;
   }
 
-  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @dev Pays the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
   function payRelayer(uint256 _blockHash) external payable override {
-    // TODO Review this function in that kind of bridge
+    // TODO Not implemented yet for this bridge implementation
   }
 
-  /// @dev This function checks if the relayer has been paid
+  /// @dev Checks if the relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
   function isRelayerPaid(uint256 _blockHash) public view override returns(bool){

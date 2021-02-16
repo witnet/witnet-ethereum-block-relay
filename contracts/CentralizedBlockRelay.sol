@@ -13,9 +13,6 @@ import "./BlockRelayInterface.sol";
  */
 contract CentralizedBlockRelay is BlockRelayInterface {
 
-  // Block reporting is not subject to increases
-  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
-
   struct BlockInfo {
     // hash of the merkle root of the DRs in Witnet
     uint256 drHashMerkleRoot;
@@ -26,7 +23,6 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     // flag to indicate that the relayer is paid
     bool isPaid;
   }
-  
 
   struct Beacon {
     // hash of the last block
@@ -34,6 +30,9 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     // epoch of the last block
     uint256 epoch;
   }
+
+  // Maximum amount of gas for reporting a Block (not subject to increases)
+  uint256 public constant MAX_REPORT_BLOCK_GAS = 127963;
   
   // List of addresses authorized to post blocks
   address[] public committee;
@@ -67,6 +66,13 @@ contract CentralizedBlockRelay is BlockRelayInterface {
   // Ensures block does not exist
   modifier blockDoesNotExist(uint256 _id){
     require(blocks[_id].drHashMerkleRoot == 0, "The block already existed");
+    _;
+  }
+
+  /// Ensures that rewards cover the cost of post a block in the Block Relay
+  modifier isPayingGasCosts(uint256 _blockReward) {
+    uint256 minBlockReward =  estimateGasCost(tx.gasprice);
+    require(_blockReward >= minBlockReward, "Block reward should cover gas expenses. Check the estimateGasCost method.");
     _;
   }
 
@@ -181,7 +187,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     emit NewBlock(msg.sender, _blockHash);
   }
 
-  /// @dev Retrieve the requests-only merkle root hash that was reported for a specific block header.
+  /// @dev Retrieves the requests-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header
   /// @return Requests-only merkle root hash in the block header.
   function readDrMerkleRoot(uint256 _blockHash)
@@ -193,7 +199,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     return blocks[_blockHash].drHashMerkleRoot;
   }
 
-  /// @dev Retrieve the tallies-only merkle root hash that was reported for a specific block header.
+  /// @dev Retrieves the tallies-only merkle root hash that was reported for a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return tallies-only merkle root hash in the block header.
   function readTallyMerkleRoot(uint256 _blockHash)
@@ -205,7 +211,7 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     return blocks[_blockHash].tallyHashMerkleRoot;
   }
 
-  /// @dev Retrieve address of the relayer that relayed a specific block header.
+  /// @dev Retrieves address of the relayer that relayed a specific block header.
   /// @param _blockHash Hash of the block header.
   /// @return address of the relayer.
   function readRelayerAddress(uint256 _blockHash)
@@ -245,37 +251,28 @@ contract CentralizedBlockRelay is BlockRelayInterface {
     }
     return _root == tree;
   }
-  /// @dev This function checks if the relayer has been paid
+
+  /// @dev Checks if the relayer has been paid
   /// @param _blockHash Hash of the block header
   /// @return true if the relayer has been paid, false otherwise
   function isRelayerPaid(uint256 _blockHash) public view override returns(bool){
     return blocks[_blockHash].isPaid;
   }
 
-  /// @dev Pay the block reward to the relayer in case it has not been paid before
+  /// @dev Pays the block reward to the relayer in case it has not been paid before
   /// @param _blockHash Hash of the block header
-  function payRelayer(uint256 _blockHash) external payable override {
+  function payRelayer(uint256 _blockHash) external payable override isPayingGasCosts(msg.value){
     require(isRelayerPaid(_blockHash) == false, "The relayer has already been paid");
-    // Check if rewards are covering gas costs
-    isPayingGasCosts(msg.value);
 
     blocks[_blockHash].isPaid = true;
     address payable relayer = payable(blocks[_blockHash].relayerAddress);
     relayer.transfer(msg.value);
   }
 
-  /// @dev Estimate the amount of reward we need to insert for a given gas price
+  /// @dev Estimates the amount of reward we need to insert for a given gas price
   /// @param _gasPrice The gas price for which we need to calculate the rewards
   /// @return The blockReward to be included for the given gas price
   function estimateGasCost(uint256 _gasPrice) public pure returns(uint256){
     return SafeMath.mul(_gasPrice, MAX_REPORT_BLOCK_GAS);
   }
-
-  /// @dev Ensures that rewards cover the cost of post a block in the Block Relay
-  /// @param _blockReward The amount for rewarding the reporting of the blocks
-  function isPayingGasCosts(uint256 _blockReward) internal view {
-    uint256 minBlockReward =  estimateGasCost(tx.gasprice);
-    require(_blockReward >= minBlockReward, "Block reward should cover gas expenses. Check the estimateGasCost method.");
-  }
-
 }
